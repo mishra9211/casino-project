@@ -2,9 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import Slider from "react-slick";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
-import Header from "./Header"; // ✅ Reusable Header component
+import Header from "./Header"; 
 import axiosInstance from "../api/axiosInstance";
 
+const CACHE_EXPIRY = 1000 * 60 * 5; // 5 minutes
 
 const Home = () => {
   const [banners, setBanners] = useState([]);
@@ -19,48 +20,74 @@ const Home = () => {
     if (hasFetched.current) return;
     hasFetched.current = true;
 
-    axiosInstance.get("/banners")
-  .then((res) => setBanners(res.data.banners || []))
-  .catch(console.error);
+    // ---------- BANNERS ----------
+    const cachedBanners = JSON.parse(localStorage.getItem("banners") || "null");
+    if (cachedBanners && Date.now() - cachedBanners.timestamp < CACHE_EXPIRY) {
+      setBanners(cachedBanners.data);
+    } else {
+      axiosInstance.get("/banners")
+        .then(res => {
+          setBanners(res.data.banners || []);
+          localStorage.setItem(
+            "banners",
+            JSON.stringify({ data: res.data.banners || [], timestamp: Date.now() })
+          );
+        })
+        .catch(console.error);
+    }
 
-    axiosInstance.get("/categories")
-      .then((res) => setCategories(res.data.categories || []))
-      .catch(console.error);
+    // ---------- CATEGORIES ----------
+    const cachedCategories = JSON.parse(localStorage.getItem("categories") || "null");
+    if (cachedCategories && Date.now() - cachedCategories.timestamp < CACHE_EXPIRY) {
+      setCategories(cachedCategories.data);
+    } else {
+      axiosInstance.get("/categories")
+        .then(res => {
+          setCategories(res.data.categories || []);
+          localStorage.setItem(
+            "categories",
+            JSON.stringify({ data: res.data.categories || [], timestamp: Date.now() })
+          );
+        })
+        .catch(console.error);
+    }
 
     fetchGamesByCategory("all");
   }, []);
 
   const fetchGamesByCategory = (catKey) => {
-  setLoading(true);
-  setGames([]);
+    setLoading(true);
+    setGames([]);
 
-  // ✅ Use categorywise API
-  let url = `/categorywise/${catKey}`; // 'all', 'live-casino', 'slots', etc.
+    const cacheKey = `games_${catKey}`;
+    const cachedGames = JSON.parse(localStorage.getItem(cacheKey) || "null");
 
-  axiosInstance
-    .get(url)
-    .then((res) => setGames(res.data.games || []))
-    .catch(console.error)
-    .finally(() => setLoading(false));
-};
+    if (cachedGames && Date.now() - cachedGames.timestamp < CACHE_EXPIRY) {
+      setGames(cachedGames.data);
+      setLoading(false);
+    } else {
+      axiosInstance.get(`/categorywise/${catKey}`)
+        .then(res => {
+          setGames(res.data.games || []);
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ data: res.data.games || [], timestamp: Date.now() })
+          );
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  };
 
   const handleCategoryClick = (catKey) => {
-    if (catKey === "matka") {
-      navigate("/matka"); // 🔹 Navigate to Matka page
-      return;
-    }
-    if (catKey === "cricket-fight") {
-      navigate("/cricket-fight"); // 🔹 Navigate to Cricket Fight page
-      return;
-    }
+    if (catKey === "matka") return navigate("/matka");
+    if (catKey === "cricket-fight") return navigate("/cricket-fight");
 
     setActiveCat(catKey);
     fetchGamesByCategory(catKey);
   };
 
-  const handleGameClick = (gameName) => {
-    navigate(`/games/${gameName}`); // 🔹 Navigate to selected game
-  };
+  const handleGameClick = (gameName) => navigate(`/games/${gameName}`);
 
   const settings = {
     dots: true,
@@ -75,10 +102,9 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      {/* ✅ Reusable Header */}
       <Header />
 
-      {/* ---------- BANNER ---------- */}
+      {/* BANNERS */}
       <section className="home-banner">
         <Slider {...settings}>
           {banners.map((banner, idx) => (
@@ -89,7 +115,7 @@ const Home = () => {
         </Slider>
       </section>
 
-      {/* ---------- CATEGORIES ---------- */}
+      {/* CATEGORIES */}
       <section className="categories">
         <div
           key="all"
@@ -118,7 +144,6 @@ const Home = () => {
           </div>
         ))}
 
-        {/* 🔹 EXTRA CATEGORY: MATKA */}
         <div
           key="matka"
           className={`category ${activeCat === "matka" ? "active" : ""}`}
@@ -127,7 +152,6 @@ const Home = () => {
           <img src="/images/nw-sp-matka.de43a991.svg" alt="Matka" />
           <p>MATKA</p>
         </div>
-        {/* 🔹 EXTRA CATEGORY: Cricket-fight */}
         <div
           key="cricket-fight"
           className={`category ${activeCat === "cricket-fight" ? "active" : ""}`}
@@ -138,7 +162,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ---------- GAME GRID ---------- */}
+      {/* GAMES GRID */}
       <section className="games-grid">
         <h3>
           {activeCat === "all"
