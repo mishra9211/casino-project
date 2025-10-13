@@ -1,7 +1,7 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "./api/axiosInstance";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 // Admin Imports
 import AdminLogin from "./pages/AdminLogin";
@@ -28,10 +28,14 @@ import WorliManage from "./pages/WorliManage";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-// ---------------- Auto logout hook ----------------
+// ---------------- Hook: Auto logout based on token expiry ----------------
 const useAutoLogoutPing = () => {
+  const navigate = useNavigate();
+
   React.useEffect(() => {
     const path = window.location.pathname;
+    if (path === "/" || path === "/admin/login") return;
+
     const tokenKey = path.startsWith("/admin") ? "admin_token" : "token";
     const token = localStorage.getItem(tokenKey);
     if (!token) return;
@@ -39,8 +43,9 @@ const useAutoLogoutPing = () => {
     let decoded;
     try {
       decoded = jwtDecode(token);
-    } catch {
-      localStorage.removeItem(tokenKey);
+    } catch (err) {
+      localStorage.clear();
+      navigate(path.startsWith("/admin") ? "/admin/login" : "/");
       return;
     }
 
@@ -49,21 +54,22 @@ const useAutoLogoutPing = () => {
     const timeout = expTime - now;
 
     if (timeout <= 0) {
-      localStorage.removeItem(tokenKey);
+      localStorage.clear();
+      navigate(path.startsWith("/admin") ? "/admin/login" : "/");
       return;
     }
 
     const timer = setTimeout(() => {
-      localStorage.removeItem(tokenKey);
-      window.location.reload();
+      localStorage.clear();
+      navigate(path.startsWith("/admin") ? "/admin/login" : "/");
     }, timeout);
 
     const pingTimer = setTimeout(async () => {
       try {
         await axiosInstance.get("/users/ping");
-      } catch {
-        localStorage.removeItem(tokenKey);
-        window.location.reload();
+      } catch (err) {
+        localStorage.clear();
+        navigate(path.startsWith("/admin") ? "/admin/login" : "/");
       }
     }, timeout - 5000 > 0 ? timeout - 5000 : 0);
 
@@ -71,53 +77,37 @@ const useAutoLogoutPing = () => {
       clearTimeout(timer);
       clearTimeout(pingTimer);
     };
-  }, []);
+  }, [navigate]);
 };
 
-// ---------------- Protected Route ----------------
-const ProtectedRoute = ({ children, isAdmin = false }) => {
-  const tokenKey = isAdmin ? "admin_token" : "token";
-  const token = localStorage.getItem(tokenKey);
+// ---------------- Protected Route Components ----------------
+const ProtectedRoute = ({ children }) => {
   const location = useLocation();
-
+  const token = localStorage.getItem("token");
   if (!token) {
-    return isAdmin ? (
-      <Navigate to="/admin/login" state={{ from: location }} replace />
-    ) : (
-      <Navigate to="https://casino-project-1.onrender.com" replace />
-    );
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
-
-  try {
-    const decoded = jwtDecode(token);
-    if (decoded.exp * 1000 < Date.now()) {
-      localStorage.removeItem(tokenKey);
-      return isAdmin ? (
-        <Navigate to="/admin/login" replace />
-      ) : (
-        <Navigate to="https://casino-project-1.onrender.com" replace />
-      );
-    }
-  } catch {
-    localStorage.removeItem(tokenKey);
-    return isAdmin ? (
-      <Navigate to="/admin/login" replace />
-    ) : (
-      <Navigate to="https://casino-project-1.onrender.com" replace />
-    );
-  }
-
   return children;
 };
 
-// ---------------- App Wrapper ----------------
+const AdminProtectedRoute = ({ children }) => {
+  const location = useLocation();
+  const token = localStorage.getItem("admin_token");
+  if (!token) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+  return children;
+};
+
+// ---------------- Wrapper Component ----------------
 const AppWrapper = () => {
-  useAutoLogoutPing();
+  useAutoLogoutPing(); // ✅ call the hook
 
   return (
     <Routes>
       {/* ---------- USER ROUTES ---------- */}
       <Route path="/" element={<UserLogin />} />
+
       <Route
         path="/home"
         element={
@@ -156,9 +146,9 @@ const AppWrapper = () => {
       <Route
         path="/admin"
         element={
-          <ProtectedRoute isAdmin={true}>
+          <AdminProtectedRoute>
             <AdminLayout />
-          </ProtectedRoute>
+          </AdminProtectedRoute>
         }
       >
         <Route path="dashboard" element={<Dashboard />} />
@@ -181,15 +171,11 @@ const AppWrapper = () => {
         }
       >
         <Route index element={<div>Select a game from left sidebar</div>} />
-        <Route
-          path=":gameName"
-          element={
-            <ProtectedRoute>
-              <GamePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path=":gameName" element={<GamePage />} />
       </Route>
+
+      {/* ---------- DEFAULT REDIRECT ---------- */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
