@@ -47,9 +47,11 @@ const UserLogin = () => {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h2>Welcome to Casino Adda</h2>
-        <p className={styles.subtitle}>Login to start playing</p>
-
+        <img
+    src="/Logo888.png"
+    alt="Casino Adda Logo"
+    className={styles.logo}
+  />
         <form onSubmit={handleLogin}>
           <div className={styles.inputGroup}>
             <input
