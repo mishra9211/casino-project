@@ -1,0 +1,27 @@
+.casino-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.casino-sidebar {
+  width: 220px;
+  background: #222;
+  color: #fff;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.casino-game-link {
+  padding: 10px;
+  border-bottom: 1px solid #444;
+  cursor: pointer;
+}
+.casino-game-link:hover {
+  background: #333;
+}
+
+.casino-content {
+  flex: 1;
+  background: #000;
+  overflow-y: auto;
+}

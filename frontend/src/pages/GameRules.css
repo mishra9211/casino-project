@@ -1,0 +1,199 @@
+/* GameRules.css */
+
+.rules-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 10px;
+  font-family: 'Arial', sans-serif;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* ---------- Add Rule Form ---------- */
+.add-rule-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-start;
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.add-rule-card select,
+.add-rule-card input[type="text"],
+.add-rule-card textarea,
+.add-rule-card input[type="file"] {
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  flex: 1 1 200px;
+}
+
+.add-rule-card button.btn-save {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+
+.add-rule-card button.btn-save:hover {
+  background-color: #45a049;
+}
+
+/* ---------- Rules Table ---------- */
+.table-card {
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.rules-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rules-table th,
+.rules-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.rules-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.rules-table img {
+  border-radius: 6px;
+}
+
+/* ---------- Buttons ---------- */
+.btn-eye, .btn-edit, .btn-delete {
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 2px;
+}
+
+.btn-eye {
+  background-color: #2196f3;
+  color: white;
+}
+
+.btn-eye:hover {
+  background-color: #1976d2;
+}
+
+.btn-edit {
+  background-color: #ffc107;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #e0a800;
+}
+
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #d32f2f;
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 90%;
+  padding: 20px;
+  position: relative;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.modal-content p {
+  font-size: 14px;
+  color: #555;
+}
+
+.modal-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.modal-scroll img {
+  margin-top: 10px;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.btn-close {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-close:hover {
+  background-color: #d32f2f;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .add-rule-card {
+    flex-direction: column;
+  }
+
+  .rules-table th,
+  .rules-table td {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .btn-eye, .btn-edit, .btn-delete {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}

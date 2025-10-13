@@ -1,0 +1,581 @@
+/* ================= Page Wrapper ================= */
+.wm-page {
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+  overflow-x: auto; /* horizontal scroll for small screens */
+}
+
+/* Top buttons */
+.wm-top-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.wm-top-buttons button {
+  padding: 10px 18px;
+  background: linear-gradient(180deg, #135c63, #107a85 48.4%, #135c63);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.4s ease;
+}
+
+.wm-top-buttons button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(180deg, #107a85, #135c63 48.4%, #107a85);
+}
+
+/* Modal Overlay - shared */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ================= Category Modal ================= */
+/* ================= Category Modal ================= */
+.category-modal .modal-content {
+  background-color: #f9f9f9; /* Lighter background for category modal */
+  padding: 25px 35px;
+  border-radius: 15px;
+  width: 400px;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  animation: scaleIn 0.3s ease;
+}
+
+.category-modal h3 {
+  text-align: center;
+  color: #107a85;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.category-modal input[type="text"],
+.category-modal input[type="number"] {
+  padding: 15px 5px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    width: 95%;
+    transition: all 0.3s ease;
+}
+
+.category-modal input[type="text"]:focus,
+.category-modal input[type="number"]:focus {
+  outline: none;
+  border-color: #107a85;
+  box-shadow: 0 0 8px rgba(16, 122, 133, 0.3);
+  background-color: #fff;
+}
+
+.category-modal .modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.category-modal .modal-actions button {
+  flex: 1;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+/* Save Button Gradient */
+.category-modal .modal-actions button:first-child {
+  background: linear-gradient(180deg, #107a85, #135c63 48.4%, #107a85);
+  color: white;
+  border: none;
+}
+
+.category-modal .modal-actions button:first-child:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+}
+
+/* Cancel Button */
+.category-modal .modal-actions button:last-child {
+  background-color: #f44336;
+  color: white;
+  border: none;
+}
+
+.category-modal .modal-actions button:last-child:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+}
+
+
+/* Table */
+.wm-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.wm-table th,
+.wm-table td {
+      color: #000000;
+    font-weight: 900;
+    font-size: 13px;
+    font-family: initial;
+    border: 1px solid #dadada;
+    padding: 10px;
+    text-align: center;
+}
+
+.wm-table th {
+  background-color: #f2f2f2;
+}
+
+.wm-table td button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+}
+
+button.active { background-color: #28a745; color: white; }
+button.active:hover { background-color: #218838; transform: translateY(-2px) scale(1.05); }
+button.inactive { background-color: #dc3545; color: white; }
+button.inactive:hover { background-color: #c82333; transform: translateY(-2px) scale(1.05); }
+button.delete { background-color: #ff4d4d; color: white; }
+button.delete:hover { background-color: #e60000; transform: translateY(-2px) scale(1.05); }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+
+/* ================= Market Modal ================= */
+.market-modal .modal-content {
+  background-color: #fefefe;
+  padding: 25px 35px;
+  border-radius: 15px;
+  width: 500px;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  animation: scaleIn 0.3s ease;
+}
+
+.market-modal h3 {
+  text-align: center;
+  color: #107a85;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+/* Category Dropdown */
+.market-modal .market-category-select {
+  width: 100%;
+  padding: 12px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.market-modal .market-category-select:focus {
+  outline: none;
+  border-color: #107a85;
+  box-shadow: 0 0 8px rgba(16, 122, 133, 0.3);
+}
+
+/* Market Name Input */
+.market-modal .market-name-input {
+  width: 96%;
+  padding: 12px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.market-modal .market-name-input:focus {
+  outline: none;
+  border-color: #107a85;
+  box-shadow: 0 0 8px rgba(16, 122, 133, 0.3);
+}
+
+/* Open / Close Dropdown */
+.market-modal .market-openclose-select {
+  width: 100%;
+  padding: 12px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.market-modal .market-openclose-select:focus {
+  outline: none;
+  border-color: #107a85;
+  box-shadow: 0 0 8px rgba(16, 122, 133, 0.3);
+}
+
+/* Match Type Inputs */
+.market-modal .match-type-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.market-modal .match-type-row label {
+  min-width: 100px;
+  font-weight: 600;
+}
+
+.market-modal .match-type-input {
+  width: 100px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.market-modal .match-type-input:focus {
+  outline: none;
+  border-color: #107a85;
+  box-shadow: 0 0 6px rgba(16, 122, 133, 0.3);
+}
+
+/* Time & Date Inputs */
+
+/* ================= Market Modal ================= */
+.market-modal .modal-content {
+  background-color: #ffffff; /* Clean white background */
+  padding: 30px 40px;
+  border-radius: 20px;
+  width: 550px;
+  max-width: 95%;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  animation: scaleIn 0.3s ease;
+  font-family: "Poppins", sans-serif;
+
+  /* Scrollable if content is too tall */
+  max-height: 80vh; /* Adjust based on your preference */
+  overflow-y: auto;
+}
+
+/* Modal Heading */
+.market-modal h3 {
+  text-align: center;
+  color: #107a85;
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+/* Section Labels */
+.market-modal label {
+  font-weight: 600;
+  color: #135c63;
+  font-size: 0.95rem;
+  margin-bottom: 5px;
+}
+
+/* Shared Input Styling */
+.market-modal input[type="text"],
+.market-modal input[type="number"],
+.market-modal select {
+  width: 100%;
+  padding: 12px 1px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  background-color: #f8f8f8;
+}
+
+.market-modal input[type="text"]:focus,
+.market-modal input[type="number"]:focus,
+.market-modal select:focus {
+  outline: none;
+  border-color: #107a85;
+  box-shadow: 0 0 10px rgba(16, 122, 133, 0.3);
+  background-color: #fff;
+}
+
+/* Small Center Input */
+.market-modal .small-center-input {
+  width: 250px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* Match Type Row */
+.market-modal .match-type-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 10px;
+  flex-wrap: nowrap; /* keep on one line */
+}
+
+.market-modal .match-type-label {
+  width: 100px;
+  font-weight: 600;
+  color: #135c63;
+  text-transform: capitalize;
+}
+
+.market-modal .match-type-input {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.market-modal .match-type-input:focus {
+  outline: none;
+  border-color: #107a85;
+  box-shadow: 0 0 8px rgba(16, 122, 133, 0.3);
+}
+
+/* 🕒 Time Row Styling */
+.market-modal .time-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.market-modal .time-row input[type="time"] {
+  flex: 1;
+  min-width: 120px;
+  max-width: 180px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.market-modal .time-row input[type="time"]:focus {
+  outline: none;
+  border-color: #107a85;
+  box-shadow: 0 0 6px rgba(16, 122, 133, 0.3);
+}
+
+@media (max-width: 500px) {
+  .market-modal .time-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .market-modal .time-row input[type="time"] {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Modal Action Buttons */
+.market-modal .modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.market-modal .modal-actions button {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Save Button */
+.market-modal .modal-actions button:first-child {
+  background: linear-gradient(180deg, #107a85, #135c63 48.4%, #107a85);
+  color: white;
+  border: none;
+}
+
+.market-modal .modal-actions button:first-child:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+}
+
+/* Cancel Button */
+.market-modal .modal-actions button:last-child {
+  background-color: #f44336;
+  color: white;
+  border: none;
+}
+
+.market-modal .modal-actions button:last-child:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+}
+
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  margin-left: 10px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #c92323; /* green */
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* optional: smaller size for table */
+.switch {
+  width: 40px;
+  height: 20px;
+}
+
+.slider:before {
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+
+.message-input-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.message-input-box input {
+      width: 200px;
+    padding: 11px 21px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    font-size: 15px;
+}
+
+.message-input-box .save-btn {
+  background-color: #28a745;
+  border: none;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.message-input-box .save-btn:hover {
+  background-color: #218838;
+}
+
+
+.wm-table-container {
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.wm-table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.wm-table-container th,
+.wm-table-container td {
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.wm-table-container thead th {
+  position: sticky;
+  top: 0;
+  background-color: #f9f9f9;
+  z-index: 1;
+}

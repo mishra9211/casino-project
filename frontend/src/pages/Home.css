@@ -1,0 +1,187 @@
+/* Container */
+.home-container {
+  background-color: #0c0c0c;
+  color: #fff;
+  font-family: "Arial", sans-serif;
+  min-height: 100vh;
+  padding-top: 90px; /* ✅ space for fixed header */
+}
+
+/* HEADER (Fixed) */
+.home-header {
+  position: fixed; /* ✅ stays visible while scrolling */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 24px;
+  border-bottom: 1px solid #222;
+  height: 90px; /* for consistent spacing */
+}
+
+.home-header .logo img {
+  height: 100px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #fff;
+  font-size: 16px;
+}
+
+.header-icon {
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.username {
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.balance {
+  font-weight: 500;
+}
+
+.deposit-btn {
+  background: #ffcc00;
+  color: #000;
+  border: none;
+  padding: 10px 24px;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  font-size: 14px;
+}
+
+.deposit-btn:hover {
+  background: #ffdb4d;
+}
+
+.logout-icon {
+  font-size: 24px;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.logout-icon:hover {
+  color: #fff;
+}
+
+/* BANNER */
+.home-banner {
+  margin: 16px 0;
+  position: relative;
+}
+
+.banner-slide img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+/* CATEGORIES */
+.categories {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding: 20px;
+  flex-wrap: wrap;
+}
+
+.category {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  width: 100px;
+}
+
+.category img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #1a1a1a;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.category p {
+  margin: 3px;
+  font-size: 15px;          /* bada kar sakte ho */
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  white-space: nowrap;       /* ✅ ek line me rakhe */          /* extra text hide kare */
+  text-overflow: ellipsis;   /* agar text bohot bada ho to ... dikhaye */
+  max-width: 100%;           /* width ke andar fit ho */
+}
+
+.category:hover {
+  transform: scale(1.1);
+}
+
+.category.active img {
+  border: 2px solid #00ff66;
+  box-shadow: 0px 0px 12px #00ff66;
+}
+
+.category.active p {
+  color: #00ff66;
+}
+
+/* GAMES GRID */
+.games-grid {
+  padding: 20px;
+}
+
+.games-grid h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.game-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.game-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0px 4px 20px rgba(0, 255, 102, 0.4);
+}

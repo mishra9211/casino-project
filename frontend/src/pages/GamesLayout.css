@@ -1,0 +1,10 @@
+/* Scrollbars छुपाने के लिए */
+.scroll-hidden {
+  overflow-y: auto;          /* scroll काम करेगा */
+  scrollbar-width: none;     /* Firefox के लिए */
+  -ms-overflow-style: none;  /* IE और Edge के लिए */
+}
+
+.scroll-hidden::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari, Edge के लिए */
+}

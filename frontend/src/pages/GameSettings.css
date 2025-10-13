@@ -1,0 +1,101 @@
+.game-settings-container {
+ 
+  min-height: 100vh;
+  padding: 30px;
+  background: #f5f6fa;
+  font-family: "Poppins", sans-serif;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.form-card, .table-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
+}
+
+.form-card h3, .table-card h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.form-grid input,
+.form-grid select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 14px;
+}
+
+.form-grid input:focus,
+.form-grid select:focus {
+  border-color: #007bff;
+}
+
+.btn-add {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #007bff;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-add:hover {
+  background: #0056b3;
+}
+
+.games-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.games-table th, .games-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.games-table th {
+  background: #007bff;
+  color: #fff;
+}
+
+.games-table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.games-table img {
+  width: 80px;
+  border-radius: 6px;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+}
+
+.btn-delete {
+  background-color: #ff4d4f;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.btn-delete:hover {
+  background-color: #d9363e;
+}

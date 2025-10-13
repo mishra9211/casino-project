@@ -1,0 +1,371 @@
+body {
+  background: #f7f8fa;
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container full width */
+.matka-game-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  overflow: hidden;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* TOP HEADER */
+.matka-top-header {
+  background: linear-gradient(to right, #004d4d, #007777);
+  color: #fff;
+  padding: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  animation: slideDown 0.5s ease-out;
+}
+
+.matka-back-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.matka-back-btn:hover {
+  color: #ffeb3b;
+  transform: translateX(-3px);
+}
+
+/* MARKET TITLE */
+.matka-market-title {
+  border-radius: 50px;
+  background: #12c2c7;
+  text-align: center;
+  padding: 10px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 10px;
+  letter-spacing: 1px;
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* NEWS BAR */
+.matka-news-bar {
+  margin: 10px;
+  background: #ffefef;
+  color: #d80000;
+  padding: 6px;
+  border-radius: 50px;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+/* INFO BOXES */
+.matka-game-info {
+  border-radius: 8px;
+  margin: 10px;
+  background-color: #f3f3f3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.info-box label {
+  font-size: 12px;
+  font-weight: 1000;
+  color: #000;
+}
+
+.info-box input,
+.info-box select {
+  width: 90%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  transition: box-shadow 0.3s, border 0.3s;
+}
+
+.info-box input:focus,
+.info-box select:focus {
+  border: 1px solid #00acc1;
+  box-shadow: 0 0 8px rgba(0,172,193,0.4);
+}
+
+/* ---------- SELECTED DIGITS SECTION ---------- */
+.matka-selected-section {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  margin: 20px;
+  font-family: "Poppins", sans-serif;
+  position: relative;
+}
+
+/* HEADER TITLE + CLEAR BUTTON */
+.selected-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selected-header h4 {
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+  color: #222;
+}
+
+.clear-all-btn {
+  background: #00bcd4;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.clear-all-btn:hover {
+  background: #01a3b8;
+}
+
+/* ---------- SELECTED DIGITS BOXES ---------- */
+.selected-digits {
+  display: flex;
+  flex-wrap: wrap;       /* ✅ wrap to next line if too many digits */
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  max-height: 250px;     /* optional: vertically scroll if too many lines */
+  overflow-y: auto;      /* scroll vertically */
+}
+
+.digit-box {
+  border: 1px solid #0d676f;
+  color: #f7044c;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #fff;
+  cursor: default;
+}
+
+/* ---------- STAKE SECTION ---------- */
+.stake-section label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 5px;
+  color: #222;
+  font-size: 15px;
+}
+
+.stake-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stake-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+  outline: none;
+}
+
+.stake-row input:focus {
+  border-color: #00bcd4;
+  box-shadow: 0 0 3px rgba(0, 188, 212, 0.5);
+}
+
+/* ---------- SUBMIT BUTTON ---------- */
+.submit-btn {
+  background: #00bcd4;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 12px 18px;
+  font-size: 15px;
+  cursor: pointer;
+  flex: 0 0 35%;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+}
+
+
+/* Animations */
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+@keyframes slideDown {
+  from {transform: translateY(-40px); opacity: 0;}
+  to {transform: translateY(0); opacity: 1;}
+}
+
+@keyframes slideUp {
+  from {transform: translateY(40px); opacity: 0;}
+  to {transform: translateY(0); opacity: 1;}
+}
+
+@keyframes pulse {
+  0% { background-color: #ffefef; }
+  50% { background-color: #ffe2e2; }
+  100% { background-color: #ffefef; }
+}
+
+.non-clickable {
+  background-color: #f4f4f4;
+  color: #333;
+  cursor: not-allowed;
+  user-select: none;
+  border: 1px solid #ccc;
+  pointer-events: none; /* makes it fully non-clickable */
+}
+/* ---------- RATE BOX ---------- */
+.rate-box {
+  width: 400%;
+  border-radius: 8px;
+  margin: 10px;
+ 
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.rate-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #333; /* dark text */
+}
+
+
+.rate-box input,
+.rate-box select {
+  width: 90%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  transition: box-shadow 0.3s, border 0.3s;
+}
+
+
+
+/* --- TAB BAR --- */
+.matka-tab-bar {
+  display: flex;
+  width: 98%;
+  background: #004d4d;
+  margin: 11px;
+  
+ 
+}
+
+.matka-tab {
+  flex: 1;
+  text-align: center;
+  padding: 6px  0;
+  color: #fff;
+  font-weight: 600;
+  background: #555;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.matka-tab.active {
+  background: #00bcd4;
+  color: #fff;
+}
+
+.matka-tab:hover {
+  background: #0097a7;
+}
+
+/* BETS SECTION PLACEHOLDER */
+.bets-section {
+  text-align: center;
+  padding: 30px 0;
+  color: #ccc;
+}
+
+
+
+/* ✅ No Records Found Styling */
+/* ✅ No Records Found Styling */
+.no-records-container {
+  width: 97%;
+    height: 156px;
+    margin: -21px auto;
+    border-radius: 6px;
+    border: 1px solid #bdbdbd;
+    background: linear-gradient(to bottom, #f7f7f7, #ebebeb);
+    display: flex
+;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.08);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.no-records-content {
+  text-align: center;
+  color: #333;
+}
+
+.no-records-icon svg {
+      width: 73px;
+    height: 69px;
+    fill: #999;
+    margin-bottom: 10px;
+}
+
+.no-records-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #004b4b; /* --primary-color */
+}
+
+
+.error-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ff4d4f;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  animation: fadein 0.3s, fadeout 0.3s 2.7s;
+}
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes fadeout {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}

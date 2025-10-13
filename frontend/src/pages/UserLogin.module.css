@@ -1,0 +1,76 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #111, #333);
+  font-family: Arial, sans-serif;
+  background: url("/public/Casino.png") no-repeat center;
+  background-size: cover;
+}
+
+.card {
+  background: #1c1c1c;
+  color: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  width: 320px;
+  box-shadow: 0px 4px 20px rgba(0,0,0,0.5);
+}
+
+.card h2 {
+  margin-bottom: 10px;
+  color: #ffd700;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.inputGroup {
+  margin-bottom: 15px;
+}
+
+.inputGroup input {
+  width: 94%;
+  padding: 10px;
+  border: none;
+  border-radius: 28px;
+  outline: none;
+  background: #2c2c2c;
+  color: #fff;
+}
+
+.loginBtn {
+  width: 100%;
+  padding: 12px;
+  background: #ffd700;
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.loginBtn:hover {
+  background: #e6c200;
+}
+
+.registerLink {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.registerLink a {
+  color: #ffd700;
+  text-decoration: none;
+}
+
+.registerLink a:hover {
+  text-decoration: underline;
+}

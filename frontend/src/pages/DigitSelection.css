@@ -1,0 +1,175 @@
+.digit-box-new {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  margin-top: 15px;
+}
+
+/* Header Row */
+.digit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.digit-header .title {
+  font-weight: 600;
+  font-size: 17px;
+  color: #111;
+}
+
+.digit-header .max-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Input Row */
+.digit-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.digit-input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  outline: none;
+}
+
+.digit-input:focus {
+  border-color: #1ca9c9;
+}
+
+.guru-btn {
+  background: #00bcd4;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.guru-btn:hover {
+  background: #019fb3;
+}
+
+
+/* ✅ Digit Buttons Grid */
+/* ✅ Make only the digit grid scrollable (not the whole page) */
+.digit-buttons {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+  padding: 0 10px;
+
+  max-height: 320px;       /* 🔹 limit height */
+  overflow-y: auto;        /* 🔹 scroll only this part */
+  scrollbar-width: thin;   /* Firefox scrollbar */
+  scrollbar-color: #bbb #f1f1f1;
+}
+
+/* ✅ Custom scrollbar for WebKit browsers (Chrome, Edge, etc.) */
+.digit-buttons::-webkit-scrollbar {
+  width: 6px;
+}
+
+.digit-buttons::-webkit-scrollbar-thumb {
+  background: #aaa;
+  border-radius: 10px;
+}
+
+.digit-buttons::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+.digit-buttons::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* ✅ Optional: adjust height for mobile */
+@media (max-width: 600px) {
+  .digit-buttons {
+    max-height: 250px; /* slightly shorter on mobile */
+  }
+}
+
+
+/* ✅ Each digit box */
+.digit-card {
+  height: 46px;
+  background: #edeff4;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.digit-card:hover {
+  background: #e9f7ff;
+  border-color: #1ca9c9;
+}
+
+/* ✅ Selected digit — only border highlight (no bg/text change) */
+.digit-card.selected {
+  background: #edeff4; /* keep same */
+  color: #000; /* keep same */
+  border-color: #00eaff;
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.8), 0 0 4px rgba(0, 188, 212, 0.5);
+  animation: glowPulse 1.4s infinite alternate;
+}
+
+/* ✅ Glow animation */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 234, 255, 0.4), 0 0 2px rgba(0, 188, 212, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(0, 234, 255, 0.9), 0 0 6px rgba(0, 188, 212, 0.7);
+  }
+}
+
+/* Text inside each box */
+.digit-number {
+  font-size: 16px;
+  font-weight: 600;
+  display: block;
+}
+
+.digit-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #00a000;
+  display: block;
+  margin-top: 7px;
+}
+
+/* ✅ Responsive */
+@media (max-width: 600px) {
+  .digit-card {
+    width: 60px;
+    height: 55px;
+  }
+}
+
+
+.digit-value.loss {
+     color: #f44949;
+    font-weight: 550;
+}
