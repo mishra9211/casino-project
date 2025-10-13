@@ -1,9 +1,9 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "./api/axiosInstance";
 import { jwtDecode } from "jwt-decode";
 
-// Admin Imports
+// ---------------- Admin Imports ----------------
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./pages/AdminLayout";
 import Dashboard from "./pages/Dashboard";
@@ -13,8 +13,9 @@ import Members from "./pages/Members";
 import BannerSettings from "./pages/BannerSettings";
 import GameSettings from "./pages/GameSettings";
 import GameRules from "./pages/GameRules";
+import WorliManage from "./pages/WorliManage";
 
-// User Imports
+// ---------------- User Imports ----------------
 import UserLogin from "./pages/UserLogin";
 import Home from "./pages/Home";
 import GamesLayout from "./pages/GamesLayout";
@@ -22,7 +23,6 @@ import GamePage from "./pages/GamePage";
 import Matka from "./pages/Matka";
 import MatkaGame from "./pages/MatkaGame";
 import CricketFight from "./pages/CricketFight";
-import WorliManage from "./pages/WorliManage";
 
 // Styles
 import "slick-carousel/slick/slick.css";
@@ -36,7 +36,7 @@ const useAutoLogoutPing = () => {
     const path = window.location.pathname;
     if (path === "/" || path === "/admin/login") return;
 
-    const tokenKey = path.startsWith("/admin") ? "admin_token" : "token";
+    const tokenKey = path.startsWith("/admin") ? "admin_token" : "user_token";
     const token = localStorage.getItem(tokenKey);
     if (!token) return;
 
@@ -44,13 +44,12 @@ const useAutoLogoutPing = () => {
     try {
       decoded = jwtDecode(token);
     } catch (err) {
-      // Invalid token
       localStorage.clear();
       navigate(path.startsWith("/admin") ? "/admin/login" : "/");
       return;
     }
 
-    const expTime = decoded.exp * 1000; // expiry in ms
+    const expTime = decoded.exp * 1000;
     const now = Date.now();
     const timeout = expTime - now;
 
@@ -60,13 +59,11 @@ const useAutoLogoutPing = () => {
       return;
     }
 
-    // Auto logout at token expiry
     const timer = setTimeout(() => {
       localStorage.clear();
       navigate(path.startsWith("/admin") ? "/admin/login" : "/");
     }, timeout);
 
-    // Optional: ping API 5 sec before expiry
     const pingTimer = setTimeout(async () => {
       try {
         await axiosInstance.get("/users/ping");
@@ -83,23 +80,88 @@ const useAutoLogoutPing = () => {
   }, [navigate]);
 };
 
+// ---------------- Protected Route Components ----------------
+const ProtectedRoute = ({ children }) => {
+  const location = useLocation();
+  const token = localStorage.getItem("user_token");
+  if (!token) {
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+  return children;
+};
+
+const AdminProtectedRoute = ({ children }) => {
+  const location = useLocation();
+  const token = localStorage.getItem("admin_token");
+  if (!token) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+  return children;
+};
+
 // ---------------- Wrapper Component ----------------
 const AppWrapper = () => {
-  useAutoLogoutPing(); // ✅ call the hook
- 
+  useAutoLogoutPing();
 
   return (
     <Routes>
       {/* ---------- USER ROUTES ---------- */}
       <Route path="/" element={<UserLogin />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/matka" element={<Matka />} />
-      <Route path="/matka-game/:id" element={<MatkaGame />} />
-      <Route path="/cricket-fight" element={<CricketFight />} />
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/matka"
+        element={
+          <ProtectedRoute>
+            <Matka />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/matka-game/:id"
+        element={
+          <ProtectedRoute>
+            <MatkaGame />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cricket-fight"
+        element={
+          <ProtectedRoute>
+            <CricketFight />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/games"
+        element={
+          <ProtectedRoute>
+            <GamesLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<div>Select a game from left sidebar</div>} />
+        <Route path=":gameName" element={<GamePage />} />
+      </Route>
 
       {/* ---------- ADMIN ROUTES ---------- */}
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin" element={<AdminLayout />}>
+
+      <Route
+        path="/admin"
+        element={
+          <AdminProtectedRoute>
+            <AdminLayout />
+          </AdminProtectedRoute>
+        }
+      >
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="market" element={<Market />} />
         <Route path="bets" element={<Bets />} />
@@ -110,11 +172,8 @@ const AppWrapper = () => {
         <Route path="worli-manage" element={<WorliManage />} />
       </Route>
 
-      {/* ---------- GAMES ROUTES ---------- */}
-      <Route path="/games" element={<GamesLayout />}>
-        <Route index element={<div>Select a game from left sidebar</div>} />
-        <Route path=":gameName" element={<GamePage />} />
-      </Route>
+      {/* ---------- DEFAULT FALLBACK ---------- */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
