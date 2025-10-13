@@ -63,13 +63,7 @@ io.on("connection", (socket) => {
 });
 
 // Serve React frontend
-const frontendBuildPath = path.join(__dirname, "frontend/build");
-app.use(express.static(frontendBuildPath));
 
-// React SPA catch-all route
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendBuildPath, "index.html"));
-});
 
 // Dynamic port for Render
 const PORT = process.env.PORT || 5001;
