@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import axiosInstance from "./api/axiosInstance";
 import { jwtDecode } from "jwt-decode";
 
@@ -44,12 +44,13 @@ const useAutoLogoutPing = () => {
     try {
       decoded = jwtDecode(token);
     } catch (err) {
+      // Invalid token
       localStorage.clear();
       navigate(path.startsWith("/admin") ? "/admin/login" : "/");
       return;
     }
 
-    const expTime = decoded.exp * 1000;
+    const expTime = decoded.exp * 1000; // expiry in ms
     const now = Date.now();
     const timeout = expTime - now;
 
@@ -59,11 +60,13 @@ const useAutoLogoutPing = () => {
       return;
     }
 
+    // Auto logout at token expiry
     const timer = setTimeout(() => {
       localStorage.clear();
       navigate(path.startsWith("/admin") ? "/admin/login" : "/");
     }, timeout);
 
+    // Optional: ping API 5 sec before expiry
     const pingTimer = setTimeout(async () => {
       try {
         await axiosInstance.get("/users/ping");
@@ -80,77 +83,23 @@ const useAutoLogoutPing = () => {
   }, [navigate]);
 };
 
-// ---------------- Protected Route Components ----------------
-const ProtectedRoute = ({ children }) => {
-  const location = useLocation();
-  const token = localStorage.getItem("token");
-  if (!token) {
-    return <Navigate to="/" state={{ from: location }} replace />;
-  }
-  return children;
-};
-
-const AdminProtectedRoute = ({ children }) => {
-  const location = useLocation();
-  const token = localStorage.getItem("admin_token");
-  if (!token) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
-  }
-  return children;
-};
-
 // ---------------- Wrapper Component ----------------
 const AppWrapper = () => {
   useAutoLogoutPing(); // ✅ call the hook
+ 
 
   return (
     <Routes>
       {/* ---------- USER ROUTES ---------- */}
       <Route path="/" element={<UserLogin />} />
-
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/matka"
-        element={
-          <ProtectedRoute>
-            <Matka />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/matka-game/:id"
-        element={
-          <ProtectedRoute>
-            <MatkaGame />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/cricket-fight"
-        element={
-          <ProtectedRoute>
-            <CricketFight />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/home" element={<Home />} />
+      <Route path="/matka" element={<Matka />} />
+      <Route path="/matka-game/:id" element={<MatkaGame />} />
+      <Route path="/cricket-fight" element={<CricketFight />} />
 
       {/* ---------- ADMIN ROUTES ---------- */}
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route
-        path="/admin"
-        element={
-          <AdminProtectedRoute>
-            <AdminLayout />
-          </AdminProtectedRoute>
-        }
-      >
+      <Route path="/admin" element={<AdminLayout />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="market" element={<Market />} />
         <Route path="bets" element={<Bets />} />
@@ -162,20 +111,10 @@ const AppWrapper = () => {
       </Route>
 
       {/* ---------- GAMES ROUTES ---------- */}
-      <Route
-        path="/games"
-        element={
-          <ProtectedRoute>
-            <GamesLayout />
-          </ProtectedRoute>
-        }
-      >
+      <Route path="/games" element={<GamesLayout />}>
         <Route index element={<div>Select a game from left sidebar</div>} />
         <Route path=":gameName" element={<GamePage />} />
       </Route>
-
-      {/* ---------- DEFAULT REDIRECT ---------- */}
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
