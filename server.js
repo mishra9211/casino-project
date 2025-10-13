@@ -67,7 +67,7 @@ const frontendBuildPath = path.join(__dirname, "frontend/build");
 app.use(express.static(frontendBuildPath));
 
 // React SPA catch-all route
-app.get("/:path(*)", (req, res) => {
+app.get("*", (req, res) => {
   res.sendFile(path.join(frontendBuildPath, "index.html"));
 });
 
