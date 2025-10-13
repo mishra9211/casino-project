@@ -67,10 +67,9 @@ const frontendBuildPath = path.join(__dirname, "frontend/build");
 app.use(express.static(frontendBuildPath));
 
 // SPA fallback for React routes
-app.get("*", (req, res) => {
+app.get("/*", (req, res) => {
   res.sendFile(path.join(frontendBuildPath, "index.html"));
 });
-
 // Dynamic port for Render
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, "0.0.0.0", () => {
