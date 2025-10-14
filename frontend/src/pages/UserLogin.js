@@ -13,13 +13,18 @@ const UserLogin = () => {
   e.preventDefault();
 
   try {
+    // 1️⃣ Detect user timezone
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone; // e.g. "Asia/Dubai"
+
+    // 2️⃣ Send login request with timezone
     const res = await axiosInstance.post("/users/login", {
       username,
       password,
       panel: "user",
+      timezone: userTimezone // <-- backend me save karenge
     });
 
-    const { token, role, username: uName, domain, _id } = res.data;
+    const { token, role, username: uName, domain, _id, timezone } = res.data;
 
     // Role check
     if (role !== "user") {
@@ -27,12 +32,13 @@ const UserLogin = () => {
       return;
     }
 
-    // ✅ Store user-specific keys including MongoDB _id
+    // ✅ Store user-specific keys including MongoDB _id & timezone
     localStorage.setItem("user_token", token);
     localStorage.setItem("user_role", role);
     localStorage.setItem("user_username", uName);
     localStorage.setItem("user_domain", domain || "");
     localStorage.setItem("user_id", _id);
+    localStorage.setItem("user_timezone", timezone); // <- save timezone
 
     setError("");
     navigate("/home");
@@ -41,6 +47,7 @@ const UserLogin = () => {
     setError(err.response?.data?.error || "Login failed ❌");
   }
 };
+
 
 
 

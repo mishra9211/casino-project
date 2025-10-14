@@ -62,7 +62,7 @@ router.get("/", auth, requireRoles(["admin", "master"]), async (req, res) => {
 
 // ---------------- Login with role check ----------------
 router.post("/login", async (req, res) => {
-  const { username, password, panel } = req.body;
+  const { username, password, panel, timezone } = req.body;
 
   try {
     const user = await User.findOne({ username });
@@ -79,7 +79,12 @@ router.post("/login", async (req, res) => {
       return res.status(403).json({ error: "Not authorized for user panel ❌" });
     }
 
-    // ✅ Token expiry now taken from .env
+    // ✅ Update user's timezone
+    if (timezone) {
+      user.timezone = timezone;
+      await user.save();
+    }
+
     const token = generateToken(user);
 
     res.json({
@@ -88,13 +93,15 @@ router.post("/login", async (req, res) => {
       _id: user._id,
       username: user.username,
       domain: user.domain,
-      balance: user.balance
+      balance: user.balance,
+      timezone: user.timezone // send back to frontend
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Login failed ❌" });
   }
 });
+
 
 // ---------------- Ping route for auto logout ----------------
 router.get("/ping", auth, (req, res) => {
