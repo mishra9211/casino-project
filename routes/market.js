@@ -146,7 +146,7 @@ router.delete("/delete/:id", auth, requireRoles(["admin", "master"]), async (req
 router.get("/public/list", async (req, res) => {
   try {
     // 1️⃣ User timezone from query or default to India
-    const userTimezone = req.query.timezone || "Asia/Kolkata"; 
+    const userTimezone = req.query.timezone || "Asia/Kolkata";
 
     // 2️⃣ Fetch active markets
     const markets = await Market.find({ is_active: 1, is_deleted: 0 })
@@ -159,21 +159,33 @@ router.get("/public/list", async (req, res) => {
 
     // 3️⃣ Convert times to user's timezone
     const marketsLocal = markets.map((market) => {
+      const marketObj = market.toObject();
+
       // Open / Close bids conversion
-      const openBidsLocal = moment.tz(market.open_bids, "HH:mm", IST).tz(userTimezone).format("HH:mm");
-      const closeBidsLocal = moment.tz(market.close_bids, "HH:mm", IST).tz(userTimezone).format("HH:mm");
+      if (market.open_bids) {
+        marketObj.open_bids = moment.tz(market.open_bids, "HH:mm", IST)
+                                    .tz(userTimezone).format("HH:mm");
+      }
+
+      if (market.close_bids) {
+        marketObj.close_bids = moment.tz(market.close_bids, "HH:mm", IST)
+                                     .tz(userTimezone).format("HH:mm");
+      }
 
       // Open / Close Date conversion
-      const openDateLocal = moment.tz(market.openDate, IST).tz(userTimezone).toISOString();
-      const closeDateLocal = moment.tz(market.closeDate, IST).tz(userTimezone).toISOString();
+      if (market.openDate) {
+        marketObj.openDate = moment.tz(market.openDate, IST)
+                                   .tz(userTimezone)
+                                   .format("YYYY-MM-DDTHH:mm:ssZ");
+      }
 
-      return {
-        ...market.toObject(),
-        open_bids: openBidsLocal,
-        close_bids: closeBidsLocal,
-        openDate: openDateLocal,
-        closeDate: closeDateLocal
-      };
+      if (market.closeDate) {
+        marketObj.closeDate = moment.tz(market.closeDate, IST)
+                                    .tz(userTimezone)
+                                    .format("YYYY-MM-DDTHH:mm:ssZ");
+      }
+
+      return marketObj;
     });
 
     res.json({ success: true, message: "SUCCESS", data: marketsLocal });
