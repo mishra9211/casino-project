@@ -145,25 +145,39 @@ router.delete("/delete/:id", auth, requireRoles(["admin", "master"]), async (req
 // ======================================================
 router.get("/public/list", async (req, res) => {
   try {
-    // 🕒 User ke timezone frontend se bhejna — fallback Asia/Kolkata
-    const userTz = req.headers["timezone"] || "Asia/Kolkata";
+    // 1️⃣ User timezone from query or default to India
+    const userTimezone = req.query.timezone || "Asia/Kolkata"; 
 
+    // 2️⃣ Fetch active markets
     const markets = await Market.find({ is_active: 1, is_deleted: 0 })
       .select(
         "id category_id category_name match_title match_type message openDate closeDate open_bids close_bids open_suspend close_suspend todayResults yesterdayResults slug suspend created_at is_active is_deleted"
       )
       .sort({ id: 1 });
 
-    // 🧭 Convert UTC → User timezone
-    const formatted = markets.map((m) => ({
-      ...m._doc,
-      openDate: moment.utc(m.openDate).tz(userTz).format(), // local ISO
-      closeDate: moment.utc(m.closeDate).tz(userTz).format(),
-      open_bids: moment.utc(m.openDate).tz(userTz).format("HH:mm"), // local time HH:mm
-      close_bids: moment.utc(m.closeDate).tz(userTz).format("HH:mm"),
-    }));
+    const IST = "Asia/Kolkata"; // DB me stored time
 
-    res.json({ success: true, message: "SUCCESS", data: formatted });
+    // 3️⃣ Convert times to user's timezone
+    const marketsLocal = markets.map((market) => {
+      // Open / Close bids conversion
+      const openBidsLocal = moment.tz(market.open_bids, "HH:mm", IST).tz(userTimezone).format("HH:mm");
+      const closeBidsLocal = moment.tz(market.close_bids, "HH:mm", IST).tz(userTimezone).format("HH:mm");
+
+      // Open / Close Date conversion
+      const openDateLocal = moment.tz(market.openDate, IST).tz(userTimezone).toISOString();
+      const closeDateLocal = moment.tz(market.closeDate, IST).tz(userTimezone).toISOString();
+
+      return {
+        ...market.toObject(),
+        open_bids: openBidsLocal,
+        close_bids: closeBidsLocal,
+        openDate: openDateLocal,
+        closeDate: closeDateLocal
+      };
+    });
+
+    res.json({ success: true, message: "SUCCESS", data: marketsLocal });
+
   } catch (err) {
     console.error("❌ public list error:", err);
     res.status(500).json({ success: false, message: err.message });
@@ -180,24 +194,14 @@ router.get("/public/detail/:marketId", async (req, res) => {
     if (!marketId)
       return res.status(400).json({ success: false, message: "Invalid marketId" });
 
-    const userTz = req.headers["timezone"] || "Asia/Kolkata";
-
+    // ✅ Exclude todayResults and yesterdayResults
     const market = await Market.findOne({ id: marketId, is_deleted: 0 })
       .select("-todayResults -yesterdayResults");
 
     if (!market)
       return res.status(404).json({ success: false, message: "Market not found" });
 
-    // 🧭 Convert UTC → User timezone
-    const formatted = {
-      ...market._doc,
-      openDate: moment.utc(market.openDate).tz(userTz).format(),
-      closeDate: moment.utc(market.closeDate).tz(userTz).format(),
-      open_bids: moment.utc(market.openDate).tz(userTz).format("HH:mm"),
-      close_bids: moment.utc(market.closeDate).tz(userTz).format("HH:mm"),
-    };
-
-    res.json({ success: true, message: "SUCCESS", data: formatted });
+    res.json({ success: true, message: "SUCCESS", data: market });
   } catch (err) {
     console.error("❌ public detail error:", err);
     res.status(500).json({ success: false, message: err.message });
