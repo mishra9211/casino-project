@@ -7,6 +7,7 @@ const Category = require("../models/Category");
 const getNextSequence = require("../models/getNextSequence");
 const { auth, requireRoles } = require("../middlewares/auth");
 const moment = require("moment-timezone");
+const User = require("../models/User");
 
 // ============================
 // 🔹 ADD MARKET (admin)
@@ -143,12 +144,16 @@ router.delete("/delete/:id", auth, requireRoles(["admin", "master"]), async (req
 // ======================================================
 // 🔸 1️⃣ PUBLIC API — ALL ACTIVE MARKETS (Match List)
 // ======================================================
-router.get("/public/list", async (req, res) => {
+router.get("/public/list", verifyToken, async (req, res) => {
   try {
-    // 1️⃣ User timezone from query or default to India
-    const userTimezone = req.query.timezone || "Asia/Kolkata";
+    // 1️⃣ Get logged-in user
+    const userId = req.user._id; // JWT middleware se aata hai
+    const user = await User.findById(userId);
 
-    // 2️⃣ Fetch active markets
+    // 2️⃣ Determine user timezone
+    const userTimezone = (user && user.timezone) || "Asia/Kolkata"; // fallback India
+
+    // 3️⃣ Fetch active markets
     const markets = await Market.find({ is_active: 1, is_deleted: 0 })
       .select(
         "id category_id category_name match_title match_type message openDate closeDate open_bids close_bids open_suspend close_suspend todayResults yesterdayResults slug suspend created_at is_active is_deleted"
@@ -157,28 +162,28 @@ router.get("/public/list", async (req, res) => {
 
     const IST = "Asia/Kolkata"; // DB me stored time
 
-    // 3️⃣ Convert times to user's timezone
+    // 4️⃣ Convert times to user's timezone
     const marketsLocal = markets.map((market) => {
       const marketObj = market.toObject();
 
-      // Open / Close bids conversion
+      // Open / Close bids
       if (market.open_bids) {
         marketObj.open_bids = moment.tz(market.open_bids, "HH:mm", IST)
-                                    .tz(userTimezone).format("HH:mm");
+                                    .tz(userTimezone)
+                                    .format("HH:mm");
       }
-
       if (market.close_bids) {
         marketObj.close_bids = moment.tz(market.close_bids, "HH:mm", IST)
-                                     .tz(userTimezone).format("HH:mm");
+                                     .tz(userTimezone)
+                                     .format("HH:mm");
       }
 
-      // Open / Close Date conversion
+      // Open / Close Dates
       if (market.openDate) {
         marketObj.openDate = moment.tz(market.openDate, IST)
                                    .tz(userTimezone)
                                    .format("YYYY-MM-DDTHH:mm:ssZ");
       }
-
       if (market.closeDate) {
         marketObj.closeDate = moment.tz(market.closeDate, IST)
                                     .tz(userTimezone)
@@ -189,7 +194,6 @@ router.get("/public/list", async (req, res) => {
     });
 
     res.json({ success: true, message: "SUCCESS", data: marketsLocal });
-
   } catch (err) {
     console.error("❌ public list error:", err);
     res.status(500).json({ success: false, message: err.message });
