@@ -144,7 +144,7 @@ router.delete("/delete/:id", auth, requireRoles(["admin", "master"]), async (req
 // ======================================================
 // 🔸 1️⃣ PUBLIC API — ALL ACTIVE MARKETS (Match List)
 // ======================================================
-router.get("/public/list",  async (req, res) => {
+router.get("/public/list", verifyToken, async (req, res) => {
   try {
     // 1️⃣ Get logged-in user
     const userId = req.user._id; // JWT middleware se aata hai
