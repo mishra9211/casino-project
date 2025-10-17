@@ -13,6 +13,9 @@ const UserLogin = () => {
   e.preventDefault();
 
   try {
+    // 🔹 ब्राउज़र का टाइमज़ोन लें
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     const res = await axiosInstance.post("/users/login", {
       username,
       password,
@@ -22,26 +25,28 @@ const UserLogin = () => {
 
     const { token, role, username: uName, domain, _id } = res.data;
 
-    // Role check
+    // Role चेक करें
     if (role !== "user") {
-      setError("You are not authorized for user panel ❌");
+      setError("आपको यूज़र पैनल की अनुमति नहीं है ❌");
       return;
     }
 
-    // ✅ Store user-specific keys including MongoDB _id
+    // ✅ डेटा को localStorage में सेव करें
     localStorage.setItem("user_token", token);
     localStorage.setItem("user_role", role);
     localStorage.setItem("user_username", uName);
     localStorage.setItem("user_domain", domain || "");
     localStorage.setItem("user_id", _id);
+    localStorage.setItem("user_timezone", timezone);
 
     setError("");
     navigate("/home");
   } catch (err) {
     console.error("Login error:", err);
-    setError(err.response?.data?.error || "Login failed ❌");
+    setError(err.response?.data?.error || "लॉगिन असफल ❌");
   }
 };
+
 
 
 
