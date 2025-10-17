@@ -17,6 +17,7 @@ const UserLogin = () => {
       username,
       password,
       panel: "user",
+      timezone
     });
 
     const { token, role, username: uName, domain, _id } = res.data;

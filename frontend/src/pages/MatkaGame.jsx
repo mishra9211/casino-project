@@ -276,7 +276,16 @@ const MatkaGame = () => {
       {/* ---------- BETS TAB ---------- */}
       {activeTab === "bets" && (
         <div className="bets-section">
-          <p>Bets overview coming soon...</p>
+          <div className="no-records-container">
+            <div className="no-records-content">
+              <div className="no-records-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none">
+                  <path fill="#00a0a8" d="M12 2L1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                </svg>
+              </div>
+              <p className="no-records-text">No Records Found!</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
