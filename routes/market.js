@@ -5,7 +5,7 @@ const router = express.Router();
 const Market = require("../models/Market");
 const Category = require("../models/Category");
 const getNextSequence = require("../models/getNextSequence");
-const { auth, requireRoles } = require("../middlewares/auth");
+const { auth, requireRoles, verifyToken } = require("../middlewares/auth");
 const moment = require("moment-timezone");
 const User = require("../models/User");
 
