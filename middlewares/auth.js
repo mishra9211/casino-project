@@ -3,12 +3,12 @@ const User = require("../models/User");
 
 // ---------------- CONFIG ----------------
 const SECRET = process.env.JWT_SECRET || "mysecret";
-const TOKEN_EXPIRY = process.env.JWT_EXPIRY || "10s"; // .env ke hisaab se
+const TOKEN_EXPIRY = process.env.JWT_EXPIRY || "1d"; // default 1 day
 
 console.log("JWT SECRET:", SECRET);
-console.log("JWT EXPIRY:", TOKEN_EXPIRY); // Debug: check kya load ho raha hai
+console.log("JWT EXPIRY:", TOKEN_EXPIRY);
 
-// ---------------- AUTH MIDDLEWARE ----------------
+// ---------------- MAIN AUTH (For Admin / Master routes) ----------------
 async function auth(req, res, next) {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "No token. Please login again." });
@@ -30,7 +30,31 @@ async function auth(req, res, next) {
   }
 }
 
-// ---------------- ROLE CHECK MIDDLEWARE ----------------
+// ---------------- verifyToken (For Public APIs with JWT) ----------------
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  // Token missing
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized: No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    req.user = decoded; // user_id, role आदि
+    next();
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expired. Please login again." });
+    }
+    console.error("verifyToken error:", err);
+    return res.status(403).json({ error: "Invalid token" });
+  }
+}
+
+// ---------------- ROLE CHECK ----------------
 function requireRoles(roles) {
   return (req, res, next) => {
     if (!req.dbUser || !roles.includes(req.dbUser.role)) {
@@ -40,9 +64,8 @@ function requireRoles(roles) {
   };
 }
 
-// ---------------- HELPER: GENERATE TOKEN ----------------
+// ---------------- GENERATE TOKEN ----------------
 function generateToken(user) {
-  // Hamesha .env ka value use hoga, default fallback 10s
   return jwt.sign(
     { user_id: user._id, role: user.role },
     SECRET,
@@ -50,4 +73,4 @@ function generateToken(user) {
   );
 }
 
-module.exports = { auth, requireRoles, generateToken };
+module.exports = { auth, verifyToken, requireRoles, generateToken };
