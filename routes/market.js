@@ -147,7 +147,7 @@ router.delete("/delete/:id", auth, requireRoles(["admin", "master"]), async (req
 router.get("/public/list", verifyToken, async (req, res) => {
   try {
     // 1️⃣ Get logged-in user
-    const userId = req.user._id; // JWT middleware se aata hai
+    const userId = req.user.user_id; // JWT middleware se aata hai
     const user = await User.findById(userId);
 
     // 2️⃣ Determine user timezone
