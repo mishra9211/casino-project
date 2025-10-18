@@ -147,11 +147,12 @@ router.delete("/delete/:id", auth, requireRoles(["admin", "master"]), async (req
 router.get("/public/list", verifyToken, async (req, res) => {
   try {
     // 1️⃣ Get logged-in user
-    const userId = req.user.user_id; // JWT middleware se aata hai
+    const userId = req.user.user_id;
     const user = await User.findById(userId);
+    if (!user) return res.status(401).json({ success: false, message: "User not found" });
 
     // 2️⃣ Determine user timezone
-    const userTimezone = (user && user.timezone) || "Asia/Kolkata"; // fallback India
+    const userTimezone = user.timezone || "Asia/Kolkata";
 
     // 3️⃣ Fetch active markets
     const markets = await Market.find({ is_active: 1, is_deleted: 0 })
@@ -160,43 +161,31 @@ router.get("/public/list", verifyToken, async (req, res) => {
       )
       .sort({ id: 1 });
 
-    const IST = "Asia/Kolkata"; // DB me stored time
+    const IST = "Asia/Kolkata"; // DB stored timezone
 
     // 4️⃣ Convert times to user's timezone
     const marketsLocal = markets.map((market) => {
-      const marketObj = market.toObject();
+      const m = market.toObject();
 
-      // Open / Close bids
-      if (market.open_bids) {
-        marketObj.open_bids = moment.tz(market.open_bids, "HH:mm", IST)
-                                    .tz(userTimezone)
-                                    .format("HH:mm");
-      }
-      if (market.close_bids) {
-        marketObj.close_bids = moment.tz(market.close_bids, "HH:mm", IST)
-                                     .tz(userTimezone)
-                                     .format("HH:mm");
-      }
+      // Convert bid times
+      if (m.open_bids)
+        m.open_bids = moment.tz(m.open_bids, "HH:mm", IST).tz(userTimezone).format("HH:mm");
+      if (m.close_bids)
+        m.close_bids = moment.tz(m.close_bids, "HH:mm", IST).tz(userTimezone).format("HH:mm");
 
-      // Open / Close Dates
-      if (market.openDate) {
-        marketObj.openDate = moment.tz(market.openDate, IST)
-                                   .tz(userTimezone)
-                                   .format("YYYY-MM-DDTHH:mm:ssZ");
-      }
-      if (market.closeDate) {
-        marketObj.closeDate = moment.tz(market.closeDate, IST)
-                                    .tz(userTimezone)
-                                    .format("YYYY-MM-DDTHH:mm:ssZ");
-      }
+      // Convert open/close dates
+      if (m.openDate)
+        m.openDate = moment.tz(m.openDate, IST).tz(userTimezone).format("YYYY-MM-DDTHH:mm:ssZ");
+      if (m.closeDate)
+        m.closeDate = moment.tz(m.closeDate, IST).tz(userTimezone).format("YYYY-MM-DDTHH:mm:ssZ");
 
-      return marketObj;
+      return m;
     });
 
     res.json({ success: true, message: "SUCCESS", data: marketsLocal });
   } catch (err) {
     console.error("❌ public list error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
