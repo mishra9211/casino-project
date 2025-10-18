@@ -193,25 +193,48 @@ router.get("/public/list", verifyToken, async (req, res) => {
 // ======================================================
 // 🔸 2️⃣ PUBLIC API — SINGLE MATCH DETAIL (Play Now)
 // ======================================================
-router.get("/public/detail/:marketId", async (req, res) => {
+router.get("/public/detail/:marketId", verifyToken, async (req, res) => {
   try {
     const marketId = Number(req.params.marketId);
     if (!marketId)
       return res.status(400).json({ success: false, message: "Invalid marketId" });
 
-    // ✅ Exclude todayResults and yesterdayResults
+    // 1️⃣ Get logged-in user
+    const userId = req.user.user_id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(401).json({ success: false, message: "User not found" });
+
+    const userTimezone = user.timezone || "Asia/Kolkata";
+    const IST = "Asia/Kolkata"; // DB stored timezone
+
+    // 2️⃣ Fetch market
     const market = await Market.findOne({ id: marketId, is_deleted: 0 })
       .select("-todayResults -yesterdayResults");
 
     if (!market)
       return res.status(404).json({ success: false, message: "Market not found" });
 
-    res.json({ success: true, message: "SUCCESS", data: market });
+    const m = market.toObject();
+
+    // Convert bid times
+    if (m.open_bids)
+      m.open_bids = moment.tz(m.open_bids, "HH:mm", IST).tz(userTimezone).format("HH:mm");
+    if (m.close_bids)
+      m.close_bids = moment.tz(m.close_bids, "HH:mm", IST).tz(userTimezone).format("HH:mm");
+
+    // Convert open/close dates
+    if (m.openDate)
+      m.openDate = moment.tz(m.openDate, IST).tz(userTimezone).format("YYYY-MM-DDTHH:mm:ssZ");
+    if (m.closeDate)
+      m.closeDate = moment.tz(m.closeDate, IST).tz(userTimezone).format("YYYY-MM-DDTHH:mm:ssZ");
+
+    res.json({ success: true, message: "SUCCESS", data: m });
   } catch (err) {
     console.error("❌ public detail error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 
 // ============================
