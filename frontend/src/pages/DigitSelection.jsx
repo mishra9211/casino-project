@@ -77,45 +77,57 @@ export default function DigitSelection({
   // FETCH BETS BOOK
   // ===========================
   useEffect(() => {
-    const fetchBetsBook = async () => {
-      if (!marketId) return;
+  let isMounted = true;
 
-      try {
-        setBetsBook({}); // ✅ clear previous book instantly
-        const res = await axiosInstance.get(`/get-matka-single-bets/${marketId}`);
+  const fetchBetsBook = async () => {
+    if (!marketId) return;
+    try {
+      setBetsBook({}); // clear previous instantly
+      const res = await axiosInstance.get(`/get-matka-single-bets/${marketId}`);
 
-        if (res.data?.bets) {
-          const bets = res.data.bets;
+      if (res.data?.bets) {
+        const bets = res.data.bets;
 
-          const filteredBets = bets.filter(
-            (bet) =>
-              bet.selection?.toLowerCase() === betType.toLowerCase() &&
-              bet.type?.toLowerCase() === marketType.toLowerCase() // ✅ filter by marketType
-          );
+        // ✅ filter only once (less CPU)
+        const filteredBets = bets.filter(
+          (bet) =>
+            bet.selection?.toLowerCase() === betType.toLowerCase() &&
+            bet.type?.toLowerCase() === marketType.toLowerCase()
+        );
 
-          const book = {};
-          digits.forEach((d) => (book[d] = 0));
+        // ✅ prepare book (using existing digits)
+        const book = {};
+        digits.forEach((d) => (book[d] = 0));
 
-          filteredBets.forEach((bet) => {
-            const winDigit = bet.odds?.toString();
-            const stake = Number(bet.stake) || 0;
-            const liability = Number(bet.liability) || 0;
-            const p_l = Number(bet.profit) || 0;
-            const profit = p_l + liability;
+        filteredBets.forEach((bet) => {
+          const winDigit = bet.odds?.toString();
+          const stake = Number(bet.stake) || 0;
+          const liability = Number(bet.liability) || 0;
+          const p_l = Number(bet.profit) || 0;
+          const profit = p_l + liability;
 
-            digits.forEach((d) => (book[d] -= stake));
-            if (book[winDigit] !== undefined) book[winDigit] += profit + stake;
-          });
+          digits.forEach((d) => (book[d] -= stake));
+          if (book[winDigit] !== undefined) book[winDigit] += profit + stake;
+        });
 
-          setBetsBook(book);
-        }
-      } catch (err) {
-        console.error("Failed to fetch bets book", err);
+        if (isMounted) setBetsBook(book);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch bets book", err);
+    }
+  };
 
+  // ✅ Trigger only when relevant things change
+  const debounceTimeout = setTimeout(() => {
     fetchBetsBook();
-  }, [marketId, betType, digits, refreshKey, marketType]); // ✅ includes marketType now
+  }, 300); // slight delay to prevent back-to-back triggers
+
+  return () => {
+    isMounted = false;
+    clearTimeout(debounceTimeout);
+  };
+}, [marketId, betType, refreshKey, marketType]); // ✅ digits removed
+ // ✅ includes marketType now
 
   // ===========================
   // DIGIT SELECTION HANDLERS
