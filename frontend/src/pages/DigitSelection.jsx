@@ -80,32 +80,25 @@ export default function DigitSelection({
   let isMounted = true;
 
   const fetchBetsBook = async () => {
-    if (!marketId) return;
+    if (!marketId || digits.length === 0) return; // ✅ ensure digits ready
     try {
-      setBetsBook({}); // clear previous instantly
+      setBetsBook({});
       const res = await axiosInstance.get(`/get-matka-single-bets/${marketId}`);
 
       if (res.data?.bets) {
-        const bets = res.data.bets;
-
-        // ✅ filter only once (less CPU)
-        const filteredBets = bets.filter(
+        const bets = res.data.bets.filter(
           (bet) =>
             bet.selection?.toLowerCase() === betType.toLowerCase() &&
             bet.type?.toLowerCase() === marketType.toLowerCase()
         );
 
-        // ✅ prepare book (using existing digits)
         const book = {};
         digits.forEach((d) => (book[d] = 0));
 
-        filteredBets.forEach((bet) => {
+        bets.forEach((bet) => {
           const winDigit = bet.odds?.toString();
           const stake = Number(bet.stake) || 0;
-          const liability = Number(bet.liability) || 0;
-          const p_l = Number(bet.profit) || 0;
-          const profit = p_l + liability;
-
+          const profit = Number(bet.profit) || 0;
           digits.forEach((d) => (book[d] -= stake));
           if (book[winDigit] !== undefined) book[winDigit] += profit + stake;
         });
@@ -117,16 +110,14 @@ export default function DigitSelection({
     }
   };
 
-  // ✅ Trigger only when relevant things change
-  const debounceTimeout = setTimeout(() => {
-    fetchBetsBook();
-  }, 300); // slight delay to prevent back-to-back triggers
+  const debounceTimeout = setTimeout(fetchBetsBook, 300);
 
   return () => {
     isMounted = false;
     clearTimeout(debounceTimeout);
   };
-}, [marketId, betType, refreshKey, marketType]); // ✅ digits removed
+}, [marketId, betType, refreshKey, marketType, digits.length]); // ✅ added digits.length
+
  // ✅ includes marketType now
 
   // ===========================
