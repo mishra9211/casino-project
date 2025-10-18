@@ -17,6 +17,8 @@ axiosInstance.interceptors.request.use(
       ? localStorage.getItem("admin_token") // admin token
       : localStorage.getItem("user_token");      // user token
 
+       console.log("Interceptor token:", token); // <- यहाँ देखो क्या आ रहा है
+
     if (token) config.headers["Authorization"] = `Bearer ${token}`;
     return config;
   },
