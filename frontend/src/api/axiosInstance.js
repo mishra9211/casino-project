@@ -15,7 +15,7 @@ axiosInstance.interceptors.request.use(
     const isAdmin = window.location.pathname.startsWith("/admin");
     const token = isAdmin
       ? localStorage.getItem("admin_token") // admin token
-      : localStorage.getItem("token");      // user token
+      : localStorage.getItem("user_token");      // user token
 
     if (token) config.headers["Authorization"] = `Bearer ${token}`;
     return config;
