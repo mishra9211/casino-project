@@ -56,28 +56,35 @@ const Home = () => {
   }, []);
 
   const fetchGamesByCategory = (catKey) => {
-    setLoading(true);
-    setGames([]);
+  setLoading(true);
+  setGames([]);
 
-    const cacheKey = `games_${catKey}`;
+  const skipCache = catKey === "live-casino" || catKey === "games"; // cache skip for these categories
+  const cacheKey = `games_${catKey}`;
+
+  if (!skipCache) {
     const cachedGames = JSON.parse(localStorage.getItem(cacheKey) || "null");
-
     if (cachedGames && Date.now() - cachedGames.timestamp < CACHE_EXPIRY) {
       setGames(cachedGames.data);
       setLoading(false);
-    } else {
-      axiosInstance.get(`/categorywise/${catKey}`)
-        .then(res => {
-          setGames(res.data.games || []);
-          localStorage.setItem(
-            cacheKey,
-            JSON.stringify({ data: res.data.games || [], timestamp: Date.now() })
-          );
-        })
-        .catch(console.error)
-        .finally(() => setLoading(false));
+      return;
     }
-  };
+  }
+
+  axiosInstance.get(`/categorywise/${catKey}`)
+    .then(res => {
+      setGames(res.data.games || []);
+      if (!skipCache) {
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({ data: res.data.games || [], timestamp: Date.now() })
+        );
+      }
+    })
+    .catch(console.error)
+    .finally(() => setLoading(false));
+};
+
 
   const handleCategoryClick = (catKey) => {
     if (catKey === "matka") return navigate("/matka");
