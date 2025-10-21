@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -9,6 +8,7 @@ const { Server } = require("socket.io");
 const multer = require("multer");
 const path = require("path");
 require("dotenv").config();
+const fetch = require("node-fetch"); // 👈 self-ping ke liye
 
 // Models
 const User = require("./models/User");
@@ -34,6 +34,11 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// ✅ Health Check Route (for uptime monitoring)
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ success: true, message: "Backend is alive ✅" });
+});
+
 // API Routes
 app.use("/api/category", categoryRoutes);
 app.use("/api/market", marketRoutes);
@@ -53,17 +58,18 @@ mongoose
 // JWT Secret
 const SECRET = process.env.JWT_SECRET || "mysecret";
 
-// Socket.io Example (Optional)
+// Socket.io
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
+  socket.on("disconnect", () => console.log("User disconnected:", socket.id));
 });
 
-// Serve React frontend
-
+// ✅ Self-Ping System (keep Render awake)
+setInterval(() => {
+  fetch("https://casino-project.onrender.com/api/health")
+    .then((res) => console.log("🟢 Self ping:", new Date().toLocaleTimeString()))
+    .catch((err) => console.log("🔴 Self ping error:", err.message));
+}, 4 * 60 * 1000); // every 4 minutes
 
 // Dynamic port for Render
 const PORT = process.env.PORT || 5001;
