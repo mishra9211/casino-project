@@ -155,11 +155,10 @@ router.get("/public/list", verifyToken, async (req, res) => {
     const userTimezone = user.timezone || "Asia/Kolkata";
 
     // 3️⃣ Fetch active markets
-    const markets = await Market.find({ is_active: 1, is_deleted: 0 })
-      .select(
-        "id category_id category_name match_title match_type message openDate closeDate open_bids close_bids open_suspend close_suspend todayResults yesterdayResults slug suspend created_at is_active is_deleted"
-      )
-      .sort({ id: 1 });
+   const markets = await Market.find({ is_active: 1, is_deleted: 0 })
+  .select("id category_id category_name match_title match_type message openDate closeDate open_bids close_bids open_suspend close_suspend todayResults yesterdayResults slug suspend created_at is_active is_deleted")
+  .sort({ id: 1 })
+  .lean();
 
     const IST = "Asia/Kolkata"; // DB stored timezone
 
