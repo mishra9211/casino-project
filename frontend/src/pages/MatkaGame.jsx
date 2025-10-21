@@ -33,6 +33,7 @@ const MatkaGame = () => {
 
   // ------------------- ERROR -------------------
   const [successMsg, setSuccessMsg] = useState("");
+
   const [errorMsg, setErrorMsg] = useState("");
 
   // ------------------- UTILS -------------------
@@ -93,7 +94,6 @@ const MatkaGame = () => {
       } catch (err) {
         console.error("Failed to fetch market details ❌", err);
         setErrorMsg("Failed to fetch market details ❌");
-        setSuccessMsg(""); // clear success toast
       } finally {
         setLoading(false);
       }
@@ -115,6 +115,13 @@ const MatkaGame = () => {
     const timer = setTimeout(() => setErrorMsg(""), 3000);
     return () => clearTimeout(timer);
   }, [errorMsg]);
+
+
+  useEffect(() => {
+  if (!successMsg) return;
+  const timer = setTimeout(() => setSuccessMsg(""), 3000);
+  return () => clearTimeout(timer);
+}, [successMsg]);
 
   // ------------------- FETCH BETS BOOK (CACHING) -------------------
  useEffect(() => {
@@ -248,24 +255,30 @@ const MatkaGame = () => {
   };
 
   try {
-    const res = await axiosInstance.post("/save-worli-matka-bet", payload);
+  const res = await axiosInstance.post("/save-worli-matka-bet", payload);
 
-    if (res.data.success) {
-      alert(res.data.success);
-      setSelectedDigits([]);
-      setStake("");
+  if (res.data.success) {
+    // ✅ Show success toast message
+    let msg = res.data.message || "Bet placed successfully!";
+    if (msg.includes("सफलतापूर्वक")) msg = "Bets placed successfully!";
 
-      // ✅ Clear cache and trigger automatic refresh
-      allBetsCacheRef.current[market.id] = null;
-      filteredBetsCacheRef.current = {};
-      setBookRefreshKey(Date.now());
-    } else {
-      setErrorMsg(res.data.message || "Failed to place bet");
-    }
-  } catch (err) {
-    console.error(err);
-    setErrorMsg(err.response?.data?.message || "Error submitting bet");
+    setSuccessMsg(msg);
+    setErrorMsg("");
+
+    setSelectedDigits([]);
+    setStake("");
+
+    // ✅ Clear cache and trigger automatic refresh
+    allBetsCacheRef.current[market.id] = null;
+    filteredBetsCacheRef.current = {};
+    setBookRefreshKey(Date.now());
+  } else {
+    setErrorMsg(res.data.message || "Failed to place bet");
   }
+} catch (err) {
+  console.error(err);
+  setErrorMsg(err.response?.data?.message || "Error submitting bet");
+}
 };
 
 
@@ -279,8 +292,8 @@ const MatkaGame = () => {
 
   return (
     <div className="matka-game-container">
-      {successMsg && <div className="success-toast">{successMsg}</div>}
       {errorMsg && <div className="error-toast">{errorMsg}</div>}
+      {successMsg && <div className="success-toast">{successMsg}</div>}
 
       <div className="matka-top-header">
         <button className="matka-back-btn" onClick={() => navigate("/matka")}>← Back to Markets</button>

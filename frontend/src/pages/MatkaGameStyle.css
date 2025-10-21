@@ -346,45 +346,33 @@ body {
 }
 
 
-/* ✅ Common Toast Styling (applies to both success & error) */
-.toast {
+.error-toast {
   position: fixed;
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
+  background-color: #ff4d4f;
   color: white;
   padding: 10px 20px;
   border-radius: 8px;
   z-index: 1000;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  font-weight: 600;
   animation: fadein 0.3s, fadeout 0.3s 2.7s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-/* 🔴 Error Toast */
-.error-toast {
-  background-color: #ff4d4f;
-}
-
-/* 🟢 Success Toast */
 .success-toast {
-  background-color: #4caf50;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4caf50; /* ✅ Green color for success */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  animation: fadein 0.3s, fadeout 0.3s 2.7s;
 }
-
-/* 🔸 Animation (keep as-is) */
-@keyframes fadein {
-  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
-@keyframes fadeout {
-  from { opacity: 1; transform: translateX(-50%) translateY(0); }
-  to { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-}
-
 
 @keyframes fadein {
   from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
