@@ -277,6 +277,7 @@ const MatkaGame = () => {
 
   return (
     <div className="matka-game-container">
+      {successMsg && <div className="success-toast">{successMsg}</div>}
       {errorMsg && <div className="error-toast">{errorMsg}</div>}
 
       <div className="matka-top-header">

@@ -16,11 +16,11 @@ router.post("/save-worli-matka-bet", verifyToken, async (req, res) => {
     // ------------------- MARKET FETCH -------------------
     const market = await Market.findOne({ id: betData.match_id });
     if (!market)
-      return res.status(400).json({ success: false, message: "Market नहीं मिला" });
+      return res.status(400).json({ success: false, message: "Market not found" });
 
     // ------------------- MARKET SUSPEND CHECK -------------------
     if (market.suspend)
-      return res.status(400).json({ success: false, message: "Market Suspend है, Bet नहीं लग सकती" });
+      return res.status(400).json({ success: false, message: "Market is suspended, you cannot place a bet" });
 
     const marketType = betData.market?.toUpperCase().trim(); // "OPEN" / "CLOSE" / "JODI"
 
@@ -47,26 +47,26 @@ router.post("/save-worli-matka-bet", verifyToken, async (req, res) => {
     // ------------------- TIME CHECK BASED ON MARKET TYPE -------------------
     if (marketType === "OPEN") {
       if (market.open_suspend)
-        return res.status(400).json({ success: false, message: "Open Market suspend है" });
+        return res.status(400).json({ success: false, message: "Open market is suspended" });
 
       if (now.isAfter(openTime))
-        return res.status(400).json({ success: false, message: "Open Time खत्म हो चुका है, Bet नहीं लग सकती" });
+        return res.status(400).json({ success: false, message: "Open time is over, you cannot place a bet" });
     }
 
     if (marketType === "CLOSE") {
       if (market.close_suspend)
-        return res.status(400).json({ success: false, message: "Close Market suspend है" });
+        return res.status(400).json({ success: false, message: "Close market is suspended" });
 
       if (now.isAfter(closeTime))
-        return res.status(400).json({ success: false, message: "Close Time खत्म हो चुका है, Bet नहीं लग सकती" });
+        return res.status(400).json({ success: false, message: "Close time is over, you cannot place a bet" });
     }
 
     if (marketType === "JODI") {
       if (market.close_suspend)
-        return res.status(400).json({ success: false, message: "Close Market suspend है, Jodi Bet नहीं लग सकती" });
+        return res.status(400).json({ success: false, message: "Close market is suspended, you cannot place a Jodi bet" });
 
       if (now.isAfter(closeTime))
-        return res.status(400).json({ success: false, message: "Jodi Time खत्म हो चुका है, Bet नहीं लग सकती" });
+        return res.status(400).json({ success: false, message: "Jodi time is over, you cannot place a bet" });
     }
 
     // ------------------- match_type PARSE -------------------
@@ -91,15 +91,15 @@ router.post("/save-worli-matka-bet", verifyToken, async (req, res) => {
     const betType = betData.bet_type.toLowerCase().trim();
     const betTypeInfo = normalizedMatchTypes[betType];
     if (!betTypeInfo)
-      return res.status(400).json({ success: false, message: "इस मार्केट के लिए Invalid Bet Type" });
+      return res.status(400).json({ success: false, message: "Invalid bet type for this market" });
 
     // ------------------- STAKE VALIDATION -------------------
     const stake = Number(betData.stake);
     if (stake < betTypeInfo.minStake)
-      return res.status(400).json({ success: false, message: `Stake minimum ${betTypeInfo.minStake} से कम है` });
+      return res.status(400).json({ success: false, message: `Stake is below the minimum limit of ${betTypeInfo.minStake}` });
 
     if (stake > betTypeInfo.maxStake)
-      return res.status(400).json({ success: false, message: `Stake maximum ${betTypeInfo.maxStake} से ज्यादा है` });
+      return res.status(400).json({ success: false, message: `Stake exceeds the maximum limit of ${betTypeInfo.maxStake}` });
 
     // ------------------- MULTIPLE DIGITS PROCESS -------------------
     const betsToSave = betData.digits.map((d) => ({
@@ -118,7 +118,7 @@ router.post("/save-worli-matka-bet", verifyToken, async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Bets सफलतापूर्वक place हो गईं!",
+      message: "Bets placed successfully!",
       bets: savedBets.map((b) => ({
         selection: betData.bet_type,
         market: betData.market,
@@ -133,9 +133,10 @@ router.post("/save-worli-matka-bet", verifyToken, async (req, res) => {
 
   } catch (err) {
     console.error("Bet place failed:", err);
-    res.status(500).json({ success: false, message: "Bet place करना failed हुआ" });
+    res.status(500).json({ success: false, message: "Failed to place bet" });
   }
 });
+
 
 
 
