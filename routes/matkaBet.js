@@ -35,6 +35,12 @@ router.post("/save-worli-matka-bet", async (req, res) => {
 
     const now = moment(); // system time
 
+    // ✅ Debug logs डालो यहाँ
+console.log("Now:", now.format());
+console.log("Open Time:", openTime.format());
+console.log("Close Time:", closeTime.format());
+console.log("Market Type:", marketType);
+
     // ------------------- TIME CHECK BASED ON MARKET TYPE -------------------
     if (marketType === "OPEN") {
       if (market.open_suspend)

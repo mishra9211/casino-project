@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "./DigitSelection.css";
-import axiosInstance from "../api/axiosInstance";
 
 export default function DigitSelection({
   selectedDigits,
   setSelectedDigits,
   betType,
-  marketId,
-  refreshKey,
-  marketType, // ✅ added
+  marketType,
+  betsBook // ✅ use from parent (MatkaGame)
 }) {
   const [digits, setDigits] = useState([]);
   const [inputValue, setInputValue] = useState("");
-  const [betsBook, setBetsBook] = useState({}); // { digit: bookValue }
 
   // ===========================
   // DIGIT GROUPS
@@ -52,83 +49,27 @@ export default function DigitSelection({
   ];
 
   // ===========================
-  // HANDLE DIGIT SET CHANGE
+  // SET DIGITS BASED ON BET TYPE
   // ===========================
   useEffect(() => {
     const type = betType.toLowerCase();
-
-    if (type === "single") {
-      setDigits(Array.from({ length: 10 }, (_, i) => i.toString()));
-    } else if (type === "single patti") {
-      setDigits(singlePattiDigits);
-    } else if (type === "double patti") {
-      setDigits(doublePattiDigits);
-    } else if (type === "triple patti") {
-      setDigits(triplePattiDigits);
-    } else if (type === "jodi") {
-      setDigits(Array.from({ length: 100 }, (_, i) => i.toString().padStart(2, "0")));
-    }
+    if (type === "single") setDigits(Array.from({ length: 10 }, (_, i) => i.toString()));
+    else if (type === "single patti") setDigits(singlePattiDigits);
+    else if (type === "double patti") setDigits(doublePattiDigits);
+    else if (type === "triple patti") setDigits(triplePattiDigits);
+    else if (type === "jodi") setDigits(Array.from({ length: 100 }, (_, i) => i.toString().padStart(2, "0")));
 
     setSelectedDigits([]);
     setInputValue("");
   }, [betType]);
 
   // ===========================
-  // FETCH BETS BOOK
-  // ===========================
-  useEffect(() => {
-  let isMounted = true;
-
-  const fetchBetsBook = async () => {
-    if (!marketId || digits.length === 0) return; // ✅ ensure digits ready
-    try {
-      setBetsBook({});
-      const res = await axiosInstance.get(`/get-matka-single-bets/${marketId}`);
-
-      if (res.data?.bets) {
-        const bets = res.data.bets.filter(
-          (bet) =>
-            bet.selection?.toLowerCase() === betType.toLowerCase() &&
-            bet.type?.toLowerCase() === marketType.toLowerCase()
-        );
-
-        const book = {};
-        digits.forEach((d) => (book[d] = 0));
-
-        bets.forEach((bet) => {
-          const winDigit = bet.odds?.toString();
-          const stake = Number(bet.stake) || 0;
-          const profit = Number(bet.profit) || 0;
-          digits.forEach((d) => (book[d] -= stake));
-          if (book[winDigit] !== undefined) book[winDigit] += profit + stake;
-        });
-
-        if (isMounted) setBetsBook(book);
-      }
-    } catch (err) {
-      console.error("Failed to fetch bets book", err);
-    }
-  };
-
-  const debounceTimeout = setTimeout(fetchBetsBook, 300);
-
-  return () => {
-    isMounted = false;
-    clearTimeout(debounceTimeout);
-  };
-}, [marketId, betType, refreshKey, marketType, digits.length]); // ✅ added digits.length
-
- // ✅ includes marketType now
-
-  // ===========================
-  // DIGIT SELECTION HANDLERS
+  // HANDLERS
   // ===========================
   const toggleDigit = (d) => {
-    if (selectedDigits.includes(d)) {
-      setSelectedDigits(selectedDigits.filter((x) => x !== d));
-    } else {
-      setSelectedDigits([...selectedDigits, d]);
-    }
+    setSelectedDigits(prev =>
+      prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]
+    );
   };
 
   const handleGuruSelection = () => {
@@ -173,7 +114,7 @@ export default function DigitSelection({
 
       <div className="digit-buttons">
         {digits.map((d) => {
-          const value = betsBook[d] || 0;
+          const value = betsBook[d] || 0; // ✅ use betsBook from MatkaGame
           const isProfit = value > 0;
           const isLoss = value < 0;
 
@@ -196,4 +137,3 @@ export default function DigitSelection({
     </div>
   );
 }
-
