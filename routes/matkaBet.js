@@ -1,3 +1,4 @@
+
 const express = require("express");
 const router = express.Router();
 const MatkaBet = require("../models/MatkaBet");
@@ -6,9 +7,10 @@ const moment = require("moment"); // npm install moment
 
 
 // 🔹 Worli Matka Bet Save Route
-router.post("/save-worli-matka-bet", async (req, res) => {
+router.post("/save-worli-matka-bet", verifyToken, async (req, res) => {
   try {
     const betData = req.body;
+    const userTimezone = req.user.timezone || "Asia/Kolkata"; // user's timezone
 
     // ------------------- MARKET FETCH -------------------
     const market = await Market.findOne({ id: betData.match_id });
@@ -21,25 +23,25 @@ router.post("/save-worli-matka-bet", async (req, res) => {
 
     const marketType = betData.market?.toUpperCase().trim(); // "OPEN" / "CLOSE" / "JODI"
 
-    // ------------------- BUILD TODAY'S OPEN & CLOSE TIMES -------------------
-    const todayDate = moment().format("YYYY-MM-DD"); // system date
+    // ------------------- BUILD TODAY'S OPEN & CLOSE TIMES (User TZ) -------------------
+    const todayDate = moment().tz(userTimezone).format("YYYY-MM-DD");
 
     const [openHour, openMin] = market.open_bids.split(":").map(Number);
     const [closeHour, closeMin] = market.close_bids.split(":").map(Number);
 
-    let openTime = moment(`${todayDate} ${openHour}:${openMin}`, "YYYY-MM-DD HH:mm");
-    let closeTime = moment(`${todayDate} ${closeHour}:${closeMin}`, "YYYY-MM-DD HH:mm");
+    let openTime = moment.tz(`${todayDate} ${openHour}:${openMin}`, "YYYY-MM-DD HH:mm", userTimezone);
+    let closeTime = moment.tz(`${todayDate} ${closeHour}:${closeMin}`, "YYYY-MM-DD HH:mm", userTimezone);
 
     // अगर closeTime openTime से पहले (रात का market)
     if (closeTime.isBefore(openTime)) closeTime.add(1, "day");
 
-    const now = moment(); // system time
+    const now = moment().tz(userTimezone);
 
-    // ✅ Debug logs डालो यहाँ
-console.log("Now:", now.format());
-console.log("Open Time:", openTime.format());
-console.log("Close Time:", closeTime.format());
-console.log("Market Type:", marketType);
+    // ------------------- DEBUG -------------------
+    console.log("Now:", now.format());
+    console.log("Open Time:", openTime.format());
+    console.log("Close Time:", closeTime.format());
+    console.log("Market Type:", marketType);
 
     // ------------------- TIME CHECK BASED ON MARKET TYPE -------------------
     if (marketType === "OPEN") {
@@ -127,6 +129,7 @@ console.log("Market Type:", marketType);
         loss: b.loss,
       })),
     });
+
   } catch (err) {
     console.error("Bet place failed:", err);
     res.status(500).json({ success: false, message: "Bet place करना failed हुआ" });
@@ -205,3 +208,4 @@ router.get("/get-matka-single-bets/:matchId", async (req, res) => {
 });
 
 module.exports = router;
+
