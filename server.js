@@ -8,7 +8,7 @@ const { Server } = require("socket.io");
 const multer = require("multer");
 const path = require("path");
 require("dotenv").config();
-const fetch = require("node-fetch"); // 👈 self-ping ke liye
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 // Models
 const User = require("./models/User");
@@ -67,7 +67,7 @@ io.on("connection", (socket) => {
 // ✅ Self-Ping System (keep Render awake)
 setInterval(() => {
   fetch("https://casino-project.onrender.com/api/health")
-    .then((res) => console.log("🟢 Self ping:", new Date().toLocaleTimeString()))
+    .then(() => console.log("🟢 Self ping:", new Date().toLocaleTimeString()))
     .catch((err) => console.log("🔴 Self ping error:", err.message));
 }, 4 * 60 * 1000); // every 4 minutes
 
