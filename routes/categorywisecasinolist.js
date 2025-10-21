@@ -10,18 +10,15 @@ const Game = require("../models/Game");
 router.get("/:key", async (req, res) => {
   try {
     const { key } = req.params;
-    const page = parseInt(req.query.page) || 1;   // optional pagination
-    const limit = parseInt(req.query.limit) || 20;
+    let games;
 
-    let query = {};
-    if (key !== "all") {
-      query.category = key;
+    if (key === "all") {
+      // Return all games
+      games = await Game.find({});
+    } else {
+      // Return games filtered by category field
+      games = await Game.find({ category: key });
     }
-
-    const games = await Game.find(query)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(); // <-- much faster
 
     if (!games || games.length === 0) {
       return res.status(404).json({
@@ -33,9 +30,6 @@ router.get("/:key", async (req, res) => {
     res.status(200).json({
       success: true,
       games,
-      page,
-      limit,
-      total: await Game.countDocuments(query), // optional: total count
     });
   } catch (err) {
     console.error("Error fetching category-wise games:", err);
@@ -45,6 +39,5 @@ router.get("/:key", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
