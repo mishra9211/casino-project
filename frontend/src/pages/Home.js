@@ -59,7 +59,8 @@ const Home = () => {
   setLoading(true);
   setGames([]);
 
-  const skipCache = catKey === "live-casino" || catKey === "games"; // cache skip for these categories
+  // skip cache for live-casino, games, and all
+  const skipCache = catKey === "live-casino" || catKey === "games" || catKey === "all";
   const cacheKey = `games_${catKey}`;
 
   if (!skipCache) {
@@ -84,6 +85,7 @@ const Home = () => {
     .catch(console.error)
     .finally(() => setLoading(false));
 };
+
 
 
   const handleCategoryClick = (catKey) => {
