@@ -32,6 +32,7 @@ const MatkaGame = () => {
   const filteredBetsCacheRef = useRef({});
 
   // ------------------- ERROR -------------------
+  const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   // ------------------- UTILS -------------------
@@ -92,6 +93,7 @@ const MatkaGame = () => {
       } catch (err) {
         console.error("Failed to fetch market details ❌", err);
         setErrorMsg("Failed to fetch market details ❌");
+        setSuccessMsg(""); // clear success toast
       } finally {
         setLoading(false);
       }
