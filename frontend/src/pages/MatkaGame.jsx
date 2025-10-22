@@ -21,6 +21,7 @@ const MatkaGame = () => {
   const [bookRefreshKey, setBookRefreshKey] = useState(0);
   const [betsData, setBetsData] = useState([]);
 
+  
 
   // ------------------- BETS BOOK -------------------
   const [betsBook, setBetsBook] = useState({});
@@ -136,6 +137,7 @@ const MatkaGame = () => {
     console.log("🟢 Loaded filtered book from cache:", key);
     return;
   }
+
 
   const fetchBets = async () => {
     try {

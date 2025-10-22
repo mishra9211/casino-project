@@ -18,13 +18,29 @@ function generateToken(user, expiresIn = TOKEN_EXPIRY) {
 }
 
 // ---------------- Register new user ----------------
-router.post("/register", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.post("/register", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   const { username, password, role, domain, uplineId, exposureLimit, masterPassword } = req.body;
   const ok = await bcrypt.compare(masterPassword || "", req.dbUser.password);
   if (!ok) return res.status(403).json({ error: "Invalid master password" });
 
-  if (req.dbUser.role === "master" && role !== "user") {
-    return res.status(403).json({ error: "Master can only create user" });
+  // ---------------- Role hierarchy rules ----------------
+  const creatorRole = req.dbUser.role;
+
+  // Owner rules
+  if (creatorRole === "owner") {
+    if (!["admin", "master", "user"].includes(role)) {
+      return res.status(403).json({ error: "Owner can only create admin/master/user" });
+    }
+  }
+
+  // Admin rules
+  if (creatorRole === "admin") {
+    if (role !== "user") return res.status(403).json({ error: "Admin can only create users" });
+  }
+
+  // Master rules
+  if (creatorRole === "master") {
+    if (role !== "user") return res.status(403).json({ error: "Master can only create users" });
   }
 
   try {
@@ -49,16 +65,29 @@ router.post("/register", auth, requireRoles(["admin", "master"]), async (req, re
   }
 });
 
+
 // ---------------- Get all users under logged-in admin/master ----------------
-router.get("/", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.get("/", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   try {
     const loggedInUser = req.dbUser;
-    const users = await User.find({ uplineId: loggedInUser._id }, "-password");
+    let users;
+
+    if (loggedInUser.role === "owner") {
+      // Owner can see all admins
+      users = await User.find({ uplineId: loggedInUser._id }, "-password");
+    } else if (loggedInUser.role === "admin") {
+      // Admin can see their users
+      users = await User.find({ uplineId: loggedInUser._id }, "-password");
+    } else if (loggedInUser.role === "master") {
+      users = await User.find({ uplineId: loggedInUser._id }, "-password");
+    }
+
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
+
 
 // ---------------- Login with role check ----------------
 router.post("/login", async (req, res) => {

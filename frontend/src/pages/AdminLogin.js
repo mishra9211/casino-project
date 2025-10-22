@@ -16,7 +16,7 @@ const AdminLogin = ({ setToken }) => {
       const res = await axiosInstance.post("/users/login", {
         username,
         password,
-        panel: "admin", // backend को बताए कि admin login
+        panel: "admin", // backend को बताए कि admin panel login
       });
 
       console.log("Login response:", res.data);
@@ -29,8 +29,8 @@ const AdminLogin = ({ setToken }) => {
         return;
       }
 
-      // ✅ Role check
-      if (role !== "admin" && role !== "master") {
+      // ✅ Role check: admin, master, owner
+      if (!["owner", "admin", "master"].includes(role)) {
         setError("You are not authorized for admin panel ❌");
         return;
       }
@@ -47,17 +47,17 @@ const AdminLogin = ({ setToken }) => {
       }
 
       setError("");
-      navigate("/admin/dashboard");
+      navigate("/admin/dashboard"); // Owner/Admin both can go to same dashboard
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.response?.data?.message || "Login Failed ❌");
+      setError(err.response?.data?.error || "Login Failed ❌");
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2 className="login-title">🎰 Admin / Master Login</h2>
+        <h2 className="login-title">🎰 Admin / Master / Owner Login</h2>
         <form onSubmit={handleLogin} className="login-form">
           <input
             type="text"
