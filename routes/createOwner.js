@@ -1,10 +1,9 @@
-require("dotenv").config(); // .env se MONGO_URI load karne ke liye
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const User = require('../models/User');
+const User = require('../models/User'); // ensure correct path
 
-// ✅ MongoDB URI from your .env
-const MONGO_URI = process.env.MONGO_URI;
+// ---------------- MongoDB URI ----------------
+const MONGO_URI = "mongodb+srv://1sportspanel:CLpqYVILeuI8rKKv@cluster0.zkam4uu.mongodb.net/director_panel?retryWrites=true&w=majority&appName=Cluster0";
 
 // ---------------- Connect MongoDB ----------------
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -30,10 +29,10 @@ async function createOwner() {
       password: hashedPassword,
       role: "owner",
       balance: 1000000,
-      player_balance: 97714.29,
-      credl: 1000000,
-      pr_client: 90,
-      worli_com_pr: 10,
+      player_balance: 0,
+      credit_reference: 1000000, // updated field
+      my_share: 100,               // updated field
+      parent_share: 0,           // updated field
       p_l: 0,
       exposure: 0,
       domain: "shoutpe247.com",
