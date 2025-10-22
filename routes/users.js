@@ -23,11 +23,7 @@ router.post(
   auth,
   requireRoles(["owner", "admin", "master"]),
   async (req, res) => {
-    const session = await mongoose.startSession();
     try {
-      session.startTransaction();
-
-      // --- Extract fields ---
       const {
         username,
         password,
@@ -37,127 +33,97 @@ router.post(
         exposureLimit,
         masterPassword,
         creditReference,
-        balance: balanceStr,
+        balance,
         maxBalance,
-        my_share: myShareBody,
+        myShare,
       } = req.body;
 
-      // --- Validate required fields ---
-      if (!username || typeof username !== "string") {
-        throw { status: 400, message: "Invalid username" };
-      }
-      if (!password || typeof password !== "string") {
-        throw { status: 400, message: "Password is required" };
-      }
-
-      // --- Numeric conversions safely ---
-      const creditAmount = isNaN(Number(balanceStr)) ? 0 : Number(balanceStr);
-      const creditReferenceNum = isNaN(Number(creditReference)) ? 0 : Number(creditReference);
-      const maxBalanceNum = isNaN(Number(maxBalance)) ? 0 : Number(maxBalance);
-      const incomingMyShare = isNaN(Number(myShareBody)) ? 0 : Number(myShareBody);
-
-      // --- Validate master password ---
-      if (!masterPassword) {
-        throw { status: 400, message: "Master password is required" };
-      }
-      const ok = await bcrypt.compare(masterPassword, req.dbUser.password);
+      // ✅ Validate master password
+      const ok = await bcrypt.compare(masterPassword || "", req.dbUser.password);
       if (!ok) {
-        throw { status: 403, message: "Invalid master password" };
+        return res.status(403).json({ error: "Invalid master password" });
       }
 
-      // --- Role hierarchy validation ---
+      // ✅ Role hierarchy validation
       const creatorRole = req.dbUser.role;
-      if (
-        (creatorRole === "owner" && !["admin", "master", "user"].includes(role)) ||
-        (creatorRole === "admin" && !["master", "user"].includes(role)) ||
-        (creatorRole === "master" && role !== "user")
-      ) {
-        throw { status: 403, message: `${creatorRole} cannot create role ${role}` };
+
+      if (creatorRole === "owner") {
+        if (!["admin", "master", "user"].includes(role)) {
+          return res
+            .status(403)
+            .json({ error: "Owner can only create admin/master/user" });
+        }
       }
 
-      // --- Normalize username ---
+      if (creatorRole === "admin") {
+        if (!["master", "user"].includes(role)) {
+          return res
+            .status(403)
+            .json({ error: "Admin can only create master/user" });
+        }
+      }
+
+      if (creatorRole === "master") {
+        if (role !== "user") {
+          return res
+            .status(403)
+            .json({ error: "Master can only create users" });
+        }
+      }
+
+      // ✅ Normalize and validate username
       const cleanUsername = username.trim().toLowerCase();
       if (cleanUsername.length < 3 || cleanUsername.length > 25) {
-        throw { status: 400, message: "Username must be 3-25 characters" };
+        return res
+          .status(400)
+          .json({ error: "Username must be between 3 and 25 characters" });
       }
-      const existingUser = await User.findOne({ username: { $regex: `^${cleanUsername}$`, $options: "i" } }).session(session);
+
+      // ✅ Check if username already exists (case-insensitive)
+      const existingUser = await User.findOne({
+        username: { $regex: new RegExp(`^${cleanUsername}$`, "i") },
+      });
+
       if (existingUser) {
-        throw { status: 400, message: "Username already taken" };
+        return res.status(400).json({ error: "Username already taken" });
       }
 
-      // --- Determine shares ---
-      let creatorShare = Number(req.dbUser.my_share || 0);
-      if (req.dbUser.role === "owner" && !creatorShare) creatorShare = 100;
-
-      let finalMyShare = incomingMyShare;
-      if (role !== "user") {
-        if (finalMyShare < 0) finalMyShare = 0;
-        if (finalMyShare > creatorShare) {
-          throw { status: 400, message: `My share cannot exceed your share (${creatorShare}%)` };
-        }
-      }
-      const finalParentShare = role !== "user" ? creatorShare - finalMyShare : 0;
-
-      // --- Check creator balance ---
-      if (creditAmount > 0) {
-        const freshCreator = await User.findById(req.dbUser._id).session(session);
-        if (!freshCreator) throw { status: 404, message: "Creator not found" };
-        if ((freshCreator.balance || 0) < creditAmount) {
-          throw { status: 400, message: "Insufficient balance to allocate this amount" };
-        }
-      }
-
-      // --- Hash password ---
+      // ✅ Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // --- Create user object ---
+      // ✅ Common user data
       const newUserData = {
         username: cleanUsername,
         password: hashedPassword,
         role: role || "user",
         domain: domain || req.dbUser.domain,
         uplineId: uplineId || req.dbUser._id,
-        exposureLimit: typeof exposureLimit !== "undefined" ? Number(exposureLimit) : -1,
-        balance: creditAmount,
-        player_balance: role === "user" ? creditAmount : 0,
-        credit_reference: creditReferenceNum,
-        maxBalance: maxBalanceNum,
-        my_share: role !== "user" ? finalMyShare : 0,
-        parent_share: role !== "user" ? finalParentShare : 0,
+        exposureLimit: exposureLimit ? Number(exposureLimit) : -1,
+        balance: Number(balance) || 0,
+        credit_reference: Number(creditReference) || 0,
       };
 
-      const [createdUser] = await User.create([newUserData], { session });
-
-      // --- Deduct creator balance ---
-      if (creditAmount > 0) {
-        const creator = await User.findById(req.dbUser._id).session(session);
-        creator.balance -= creditAmount;
-        await creator.save({ session });
+      // ✅ Extra fields for non-user roles (admin/master)
+      if (role !== "user") {
+        newUserData.maxBalance = Number(maxBalance) || 0;
+        newUserData.my_share = Number(myShare) || 0;
+        newUserData.parent_share = Number(req.dbUser.my_share) || 0; // 🔗 parent’s share for hierarchy
       }
 
-      await session.commitTransaction();
-      session.endSession();
+      // ✅ Create the user
+      const user = await User.create(newUserData);
 
-      const userObj = createdUser.toObject();
-      delete userObj.password;
-
-      return res.json({ success: true, user: userObj });
-
+      res.json({
+        success: true,
+        message: "User created successfully",
+        user,
+      });
     } catch (err) {
-      // --- Rollback transaction ---
-      try { await session.abortTransaction(); } catch (e) { console.error("Rollback failed:", e); }
-      session.endSession();
-
-      // --- Send proper error message ---
-      console.error("❌ Register error:", err);
-      const status = err.status || 500;
-      const message = err.message || "Internal Server Error";
-      return res.status(status).json({ error: message });
+      console.error("❌ Error creating user:", err);
+      res.status(400).json({ error: "Failed to create user" });
     }
   }
 );
-
-
 
 
 
