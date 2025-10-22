@@ -8,11 +8,11 @@ const Members = () => {
   const [showModal, setShowModal] = useState(false);
 
   // logged in user data from localStorage
-  const loggedInUser = {
-    username: localStorage.getItem("username"),
-    domain: localStorage.getItem("domain"),
-    role: localStorage.getItem("role"),
-  };
+ const loggedInUser = {
+  username: localStorage.getItem("admin_username"), // "owner01"
+  domain: localStorage.getItem("admin_domain"),     // "shoutpe247.com"
+  role: localStorage.getItem("admin_role"),         // "owner"
+};
 
   useEffect(() => {
     fetchUsers();

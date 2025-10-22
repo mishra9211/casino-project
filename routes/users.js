@@ -101,14 +101,14 @@ router.post("/login", async (req, res) => {
     if (!match) return res.status(400).json({ error: "Wrong password" });
 
     // Role check based on panel
-    if (panel === "admin" && !(user.role === "admin" || user.role === "master" || user.role === "owner")) {
+    if (panel === "admin" && !(["admin","master","owner"].includes(user.role))) {
       return res.status(403).json({ error: "Not authorized for admin panel ❌" });
     }
     if (panel === "user" && user.role !== "user") {
       return res.status(403).json({ error: "Not authorized for user panel ❌" });
     }
 
-    // ✅ Update user's timezone
+    // Update timezone if sent
     if (timezone) {
       user.timezone = timezone;
       await user.save();
@@ -116,20 +116,29 @@ router.post("/login", async (req, res) => {
 
     const token = generateToken(user);
 
+    // ✅ Send all financial fields along with user info
     res.json({
       token,
-      role: user.role,
       _id: user._id,
       username: user.username,
+      role: user.role,
       domain: user.domain,
       balance: user.balance,
-      timezone: user.timezone // send back to frontend
+      player_balance: user.player_balance,
+      credit_reference: user.credit_reference,
+      my_share: user.my_share,
+      parent_share: user.parent_share,
+      p_l: user.p_l,
+      exposure: user.exposure,
+      exposureLimit: user.exposureLimit,
+      timezone: user.timezone
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Login failed ❌" });
   }
 });
+
 
 
 
