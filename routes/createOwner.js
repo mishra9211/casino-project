@@ -1,18 +1,31 @@
+require("dotenv").config(); // .env se MONGO_URI load karne ke liye
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const User = require("./models/User"); // yaha apna User model ka path sahi lagao
+const User = require("./models/User"); // path sahi hai to change na kare
 
-// MongoDB connection
-mongoose.connect("mongodb://localhost:27017/yourDBName", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// ✅ MongoDB URI from your .env
+const MONGO_URI = process.env.MONGO_URI;
 
+// ---------------- Connect MongoDB ----------------
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => {
+    console.error("❌ MongoDB connection failed", err);
+    process.exit(1);
+  });
+
+// ---------------- Owner account data ----------------
 async function createOwner() {
   try {
-    const hashedPassword = await bcrypt.hash("OwnerPassword123", 10); // apna desired password yaha dalna
+    const existing = await User.findOne({ username: "owner01" });
+    if (existing) {
+      console.log("⚠ Owner already exists:", existing._id);
+      return process.exit(0);
+    }
 
-    const owner = new User({
+    const hashedPassword = await bcrypt.hash("Owner@123", 10); // change password as needed
+
+    const owner = await User.create({
       username: "owner01",
       password: hashedPassword,
       role: "owner",
@@ -29,13 +42,13 @@ async function createOwner() {
       timezone: "Asia/Kolkata"
     });
 
-    await owner.save();
-    console.log("✅ Owner created:", owner);
+    console.log("✅ Owner created successfully:", owner);
+    process.exit(0);
   } catch (err) {
-    console.error("❌ Failed to create owner:", err);
-  } finally {
-    mongoose.connection.close();
+    console.error("❌ Failed to create owner", err);
+    process.exit(1);
   }
 }
 
+// ---------------- Run ----------------
 createOwner();
