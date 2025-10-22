@@ -48,7 +48,7 @@ const adminData = {
     <div className="members-page">
       {/* ==== Top Tabs ==== */}
       <div className="tabs">
-        {["Admin", "Master", "User", "Client Statements"].map((tab) => (
+        {["Admin", "Master", "User", /*"Client Statements"]*/].map((tab) => (
           <button
             key={tab}
             className={`tab-item ${tab === activeTab ? "active" : ""}`}

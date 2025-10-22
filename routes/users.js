@@ -19,7 +19,6 @@ function generateToken(user, expiresIn = TOKEN_EXPIRY) {
 }
 
 // ---------------- Register new user ----------------
-// ---------------- Register new user ----------------
 router.post(
   "/register",
   auth,
@@ -29,7 +28,6 @@ router.post(
     try {
       session.startTransaction();
 
-      // --- Extract fields ---
       const {
         username,
         password,
@@ -45,7 +43,6 @@ router.post(
         parent_share: parentShareBody,
       } = req.body;
 
-      // --- Numeric conversions ---
       const creditAmount = Number(balanceStr || 0);
       const creditReferenceNum = Number(creditReference || 0);
       const maxBalanceNum = Number(maxBalance || 0);
@@ -77,18 +74,13 @@ router.post(
         return res.status(403).json({ error: "Master can only create users" });
       }
 
-      // --- Validate & normalize username ---
+      // --- Validate username ---
       if (!username || typeof username !== "string") {
         await session.abortTransaction();
         session.endSession();
         return res.status(400).json({ error: "Invalid username" });
       }
       const cleanUsername = username.trim().toLowerCase();
-      if (cleanUsername.length < 3 || cleanUsername.length > 25) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ error: "Username must be between 3 and 25 characters" });
-      }
       const existingUser = await User.findOne({
         username: { $regex: new RegExp(`^${cleanUsername}$`, "i") },
       }).session(session);
@@ -108,13 +100,24 @@ router.post(
         if (finalMyShare > creatorShare) {
           await session.abortTransaction();
           session.endSession();
-          return res.status(400).json({ error: `My share cannot exceed your share (${creatorShare}%)` });
+          return res.status(400).json({
+            error: `My share cannot exceed your share (${creatorShare}%)`,
+          });
         }
       }
 
       const finalParentShare = role !== "user" ? creatorShare - finalMyShare : 0;
 
-      // --- Check creator balance for creditAmount ---
+      // ✅ Validate: Credit Reference and Balance must be equal
+      if (Number(creditReference) !== Number(balanceStr)) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          error: "Credit Reference and Balance must be equal",
+        });
+      }
+
+      // --- Check creator balance ---
       if (creditAmount > 0) {
         const freshCreator = await User.findById(req.dbUser._id).session(session);
         if (!freshCreator) {
@@ -126,14 +129,20 @@ router.post(
         if (creatorBalance < creditAmount) {
           await session.abortTransaction();
           session.endSession();
-          return res.status(400).json({ error: "Insufficient balance to allocate this amount" });
+          return res.status(400).json({
+            error: "Insufficient balance to allocate this amount",
+          });
         }
+
+        // ✅ Deduct from creator
+        freshCreator.balance = creatorBalance - creditAmount;
+        await freshCreator.save({ session });
       }
 
       // --- Hash password ---
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // --- Create new user object ---
+      // --- Create new user ---
       const newUserData = {
         username: cleanUsername,
         password: hashedPassword,
@@ -141,23 +150,15 @@ router.post(
         domain: domain || req.dbUser.domain,
         uplineId: uplineId || req.dbUser._id,
         exposureLimit: typeof exposureLimit !== "undefined" ? Number(exposureLimit) : -1,
-        balance: creditAmount,
-        player_balance: role === "user" ? creditAmount : 0,
         credit_reference: creditReferenceNum,
         maxBalance: maxBalanceNum,
         my_share: role !== "user" ? finalMyShare : 0,
         parent_share: role !== "user" ? finalParentShare : 0,
+        balance: creditAmount, // ✅ initial balance given by upline
+        player_balance: role === "user" ? creditAmount : 0, // ✅ for user, player_balance = balance
       };
 
-      // --- Save user ---
       const [createdUser] = await User.create([newUserData], { session });
-
-      // --- Deduct creator balance ---
-      if (creditAmount > 0) {
-        const creator = await User.findById(req.dbUser._id).session(session);
-        creator.balance = Number(creator.balance || 0) - creditAmount;
-        await creator.save({ session });
-      }
 
       await session.commitTransaction();
       session.endSession();
@@ -165,15 +166,24 @@ router.post(
       const userObj = createdUser.toObject();
       delete userObj.password;
 
-      return res.json({ success: true, user: userObj });
+      return res.json({
+        success: true,
+        message: `User ${userObj.username} created successfully with ${creditAmount} balance`,
+        user: userObj,
+      });
     } catch (err) {
       console.error("❌ Error creating user (register):", err);
-      try { await session.abortTransaction(); } catch (e) { console.error(e); }
+      try {
+        await session.abortTransaction();
+      } catch (e) {
+        console.error(e);
+      }
       session.endSession();
       return res.status(500).json({ error: "Internal Server Error" });
     }
   }
 );
+
 
 
 
