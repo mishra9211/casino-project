@@ -27,7 +27,7 @@ router.post(
     try {
       session.startTransaction();
 
-      // --- extract fields (accept both snake_case and camelCase just in case) ---
+      // --- Extract fields ---
       const {
         username,
         password,
@@ -41,14 +41,13 @@ router.post(
         maxBalance,
         my_share: myShareBody,
         parent_share: parentShareBody,
-        myShare: myShareAlt,
-        parentShare: parentShareAlt,
       } = req.body;
 
-      // normalize incoming numeric fields
+      // --- Numeric conversions ---
+      const creditAmount = Number(balanceStr || 0);
       const creditReferenceNum = Number(creditReference || 0);
-      const creditAmount = Number(balanceStr || 0); // amount to transfer from creator -> new user
       const maxBalanceNum = Number(maxBalance || 0);
+      const incomingMyShare = Number(myShareBody || 0);
 
       // --- Validate master password ---
       const ok = await bcrypt.compare(masterPassword || "", req.dbUser.password);
@@ -76,7 +75,7 @@ router.post(
         return res.status(403).json({ error: "Master can only create users" });
       }
 
-      // --- Username normalize & validate ---
+      // --- Validate & normalize username ---
       if (!username || typeof username !== "string") {
         await session.abortTransaction();
         session.endSession();
@@ -88,7 +87,6 @@ router.post(
         session.endSession();
         return res.status(400).json({ error: "Username must be between 3 and 25 characters" });
       }
-      // check existence (case-insensitive)
       const existingUser = await User.findOne({
         username: { $regex: new RegExp(`^${cleanUsername}$`, "i") },
       }).session(session);
@@ -98,52 +96,23 @@ router.post(
         return res.status(400).json({ error: "Username already taken" });
       }
 
-      // --- Determine creator's total share (default owner -> 100) ---
+      // --- Determine shares ---
       let creatorShare = Number(req.dbUser.my_share || 0);
-      if (!creatorShare && req.dbUser.role === "owner") creatorShare = 100;
+      if (req.dbUser.role === "owner" && !creatorShare) creatorShare = 100;
 
-      // --- Parse incoming shares (prefer snake_case, fallback to camelCase) ---
-      const incomingMyShare = Number(
-        typeof myShareBody !== "undefined" ? myShareBody : (typeof myShareAlt !== "undefined" ? myShareAlt : 0)
-      );
-      const incomingParentShare = typeof parentShareBody !== "undefined"
-        ? Number(parentShareBody)
-        : (typeof parentShareAlt !== "undefined" ? Number(parentShareAlt) : undefined);
-
-      // If creating non-user role, validate shares
-      let finalMyShare = 0;
-      let finalParentShare = 0;
+      let finalMyShare = incomingMyShare;
       if (role !== "user") {
-        // my_share must be provided (or at least meaningful)
-        finalMyShare = Number(isNaN(incomingMyShare) ? 0 : incomingMyShare);
-
         if (finalMyShare < 0) finalMyShare = 0;
         if (finalMyShare > creatorShare) {
           await session.abortTransaction();
           session.endSession();
           return res.status(400).json({ error: `My share cannot exceed your share (${creatorShare}%)` });
         }
-
-        if (typeof incomingParentShare !== "undefined") {
-          // If frontend explicitly sent parent_share, validate total not exceed creatorShare
-          finalParentShare = Number(isNaN(incomingParentShare) ? 0 : incomingParentShare);
-          if (finalParentShare < 0) finalParentShare = 0;
-
-          if (finalMyShare + finalParentShare > creatorShare) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ error: `Sum of my_share and parent_share cannot exceed your share (${creatorShare}%)` });
-          }
-
-          // If sum less than creatorShare, allow — parent_share remains as sent (creator retains remainder)
-          // Optionally: force parent_share = creatorShare - my_share — but here we allow explicit parent_share if valid.
-        } else {
-          // parent_share not provided -> compute as remaining from creator
-          finalParentShare = creatorShare - finalMyShare;
-        }
       }
 
-      // --- Balance transfer check: ensure creator has enough balance if creditAmount > 0 ---
+      const finalParentShare = role !== "user" ? creatorShare - finalMyShare : 0;
+
+      // --- Check creator balance for creditAmount ---
       if (creditAmount > 0) {
         const freshCreator = await User.findById(req.dbUser._id).session(session);
         if (!freshCreator) {
@@ -162,7 +131,7 @@ router.post(
       // --- Hash password ---
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // --- Build new user object ---
+      // --- Create new user object ---
       const newUserData = {
         username: cleanUsername,
         password: hashedPassword,
@@ -170,38 +139,27 @@ router.post(
         domain: domain || req.dbUser.domain,
         uplineId: uplineId || req.dbUser._id,
         exposureLimit: typeof exposureLimit !== "undefined" ? Number(exposureLimit) : -1,
-        balance: creditAmount, // initial balance equals credited amount (0 if none)
-        credit_reference: creditReferenceNum || 0,
-        maxBalance: Number(maxBalanceNum || 0),
+        balance: creditAmount,
         player_balance: role === "user" ? creditAmount : 0,
+        credit_reference: creditReferenceNum,
+        maxBalance: maxBalanceNum,
+        my_share: role !== "user" ? finalMyShare : 0,
+        parent_share: role !== "user" ? finalParentShare : 0,
       };
 
-      if (role !== "user") {
-        newUserData.my_share = finalMyShare;
-        newUserData.parent_share = finalParentShare;
-      } else {
-        // for plain users we can leave shares as defaults (0)
-        newUserData.my_share = 0;
-        newUserData.parent_share = 0;
-      }
+      // --- Save user ---
+      const [createdUser] = await User.create([newUserData], { session });
 
-      // --- Create user inside transaction ---
-      const createdUsers = await User.create([newUserData], { session });
-      const createdUser = createdUsers[0];
-
-      // --- Deduct creator balance if creditAmount > 0 ---
+      // --- Deduct creator balance ---
       if (creditAmount > 0) {
         const creator = await User.findById(req.dbUser._id).session(session);
         creator.balance = Number(creator.balance || 0) - creditAmount;
         await creator.save({ session });
-
-        // Optional: also record ledger / transaction log here
       }
 
       await session.commitTransaction();
       session.endSession();
 
-      // Remove password before return
       const userObj = createdUser.toObject();
       delete userObj.password;
 
@@ -210,7 +168,7 @@ router.post(
       console.error("❌ Error creating user (register):", err);
       try { await session.abortTransaction(); } catch (e) { console.error(e); }
       session.endSession();
-      return res.status(400).json({ error: "Failed to create user" });
+      return res.status(500).json({ error: "Internal Server Error" });
     }
   }
 );
