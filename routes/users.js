@@ -35,7 +35,7 @@ router.post(
         creditReference,
         balance,
         maxBalance,
-        myShare,
+        my_share,
       } = req.body;
 
       // ✅ Validate master password
@@ -44,34 +44,28 @@ router.post(
         return res.status(403).json({ error: "Invalid master password" });
       }
 
-      // ✅ Role hierarchy validation
+      // ---------------- Role hierarchy validation ----------------
       const creatorRole = req.dbUser.role;
 
-      if (creatorRole === "owner") {
-        if (!["admin", "master", "user"].includes(role)) {
-          return res
-            .status(403)
-            .json({ error: "Owner can only create admin/master/user" });
-        }
+      if (creatorRole === "owner" && !["admin", "master", "user"].includes(role)) {
+        return res
+          .status(403)
+          .json({ error: "Owner can only create admin/master/user" });
       }
 
-      if (creatorRole === "admin") {
-        if (!["master", "user"].includes(role)) {
-          return res
-            .status(403)
-            .json({ error: "Admin can only create master/user" });
-        }
+      if (creatorRole === "admin" && !["master", "user"].includes(role)) {
+        return res
+          .status(403)
+          .json({ error: "Admin can only create master/user" });
       }
 
-      if (creatorRole === "master") {
-        if (role !== "user") {
-          return res
-            .status(403)
-            .json({ error: "Master can only create users" });
-        }
+      if (creatorRole === "master" && role !== "user") {
+        return res
+          .status(403)
+          .json({ error: "Master can only create users" });
       }
 
-      // ✅ Normalize and validate username
+      // ---------------- Username validation ----------------
       const cleanUsername = username.trim().toLowerCase();
       if (cleanUsername.length < 3 || cleanUsername.length > 25) {
         return res
@@ -79,19 +73,28 @@ router.post(
           .json({ error: "Username must be between 3 and 25 characters" });
       }
 
-      // ✅ Check if username already exists (case-insensitive)
       const existingUser = await User.findOne({
         username: { $regex: new RegExp(`^${cleanUsername}$`, "i") },
       });
-
       if (existingUser) {
         return res.status(400).json({ error: "Username already taken" });
+      }
+
+      // ---------------- Share validation ----------------
+      if (role !== "user") {
+        const creatorShare = Number(req.dbUser.my_share || 0);
+
+        if (Number(my_share || 0) > creatorShare) {
+          return res.status(400).json({
+            error: `My share cannot exceed your own share (${creatorShare}%)`,
+          });
+        }
       }
 
       // ✅ Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // ✅ Common user data
+      // ---------------- Create user object ----------------
       const newUserData = {
         username: cleanUsername,
         password: hashedPassword,
@@ -103,14 +106,13 @@ router.post(
         credit_reference: Number(creditReference) || 0,
       };
 
-      // ✅ Extra fields for non-user roles (admin/master)
       if (role !== "user") {
         newUserData.maxBalance = Number(maxBalance) || 0;
-        newUserData.my_share = Number(myShare) || 0;
-        newUserData.parent_share = Number(req.dbUser.my_share) || 0; // 🔗 parent’s share for hierarchy
+        newUserData.my_share = Number(my_share) || 0;
+        newUserData.parent_share = Number(req.dbUser.my_share) - Number(my_share || 0); // Auto-calculate parent share
       }
 
-      // ✅ Create the user
+      // ✅ Save to DB
       const user = await User.create(newUserData);
 
       res.json({
