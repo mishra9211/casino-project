@@ -101,7 +101,7 @@ router.post("/login", async (req, res) => {
     if (!match) return res.status(400).json({ error: "Wrong password" });
 
     // Role check based on panel
-    if (panel === "admin" && !(user.role === "admin" || user.role === "master")) {
+    if (panel === "admin" && !(user.role === "admin" || user.role === "master" || user.role === "owner")) {
       return res.status(403).json({ error: "Not authorized for admin panel ❌" });
     }
     if (panel === "user" && user.role !== "user") {
@@ -130,6 +130,7 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ error: "Login failed ❌" });
   }
 });
+
 
 
 // ---------------- Ping route for auto logout ----------------
