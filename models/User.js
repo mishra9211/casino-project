@@ -8,11 +8,9 @@ const UserSchema = new mongoose.Schema({
   // Financial / commission fields
   balance: { type: Number, default: 0 },
   player_balance: { type: Number, default: 0 },
-  credl: { type: Number, default: 0 },
-  book_com_pr: { type: Number, default: 0 },
-  book_com_type: { type: Number, default: 2 },
-  pr_client: { type: Number, default: null },
-  worli_com_pr: { type: Number, default: 0 },
+  credit_reference: { type: Number, default: 0 }, // new
+  my_share: { type: Number, default: 0 },         // new
+  parent_share: { type: Number, default: 0 },     // new
   p_l: { type: Number, default: 0 },
   exposure: { type: Number, default: 0 },
 
