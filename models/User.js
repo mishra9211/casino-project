@@ -16,7 +16,6 @@ const UserSchema = new mongoose.Schema(
     credit_reference: { type: Number, default: 0 },
     my_share: { type: Number, default: 0 },
     parent_share: { type: Number, default: 0 },
-    client_share: { type: Number, default: 0 }, // ✅ NEW FIELD
     maxBalance: { type: Number, default: 0 },   // ✅ NEW FIELD
     p_l: { type: Number, default: 0 },
     exposure: { type: Number, default: 0 },

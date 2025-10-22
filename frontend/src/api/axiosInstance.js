@@ -25,24 +25,24 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+
 // Response interceptor – handle expired / invalid token
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
 
-    if (status === 401 || status === 403) {
-      const isAdmin = window.location.pathname.startsWith("/admin");
+    const isAdmin = window.location.pathname.startsWith("/admin");
 
+    if (status === 401) {
+      // Only logout on 401 (unauthorized)
       if (isAdmin) {
-        // Clear admin storage and redirect to admin login
         localStorage.removeItem("admin_token");
         localStorage.removeItem("admin_username");
         localStorage.removeItem("admin_role");
         localStorage.removeItem("admin_domain");
         window.location.href = "/admin/login";
       } else {
-        // Clear user storage and redirect to user login
         localStorage.removeItem("token");
         localStorage.removeItem("username");
         localStorage.removeItem("role");
@@ -51,8 +51,10 @@ axiosInstance.interceptors.response.use(
       }
     }
 
+    // 403 validation errors → do NOT logout
     return Promise.reject(error);
   }
 );
+
 
 export default axiosInstance;

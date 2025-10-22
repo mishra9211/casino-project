@@ -18,91 +18,113 @@ function generateToken(user, expiresIn = TOKEN_EXPIRY) {
 }
 
 // ---------------- Register new user ----------------
-router.post("/register", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
-  try {
-    const {
-      username,
-      password,
-      role,
-      domain,
-      uplineId,
-      exposureLimit,
-      masterPassword,
-      creditReference,
-      balance,
-      maxBalance,
-      myShare,
-      clientShare,
-    } = req.body;
+router.post(
+  "/register",
+  auth,
+  requireRoles(["owner", "admin", "master"]),
+  async (req, res) => {
+    try {
+      const {
+        username,
+        password,
+        role,
+        domain,
+        uplineId,
+        exposureLimit,
+        masterPassword,
+        creditReference,
+        balance,
+        maxBalance,
+        myShare,
+      } = req.body;
 
-    // ✅ Validate master password
-    const ok = await bcrypt.compare(masterPassword || "", req.dbUser.password);
-    if (!ok) {
-      return res.status(403).json({ error: "Invalid master password" });
-    }
-
-    // ---------------- Role hierarchy rules ----------------
-    const creatorRole = req.dbUser.role;
-
-    if (creatorRole === "owner") {
-      if (!["admin", "master", "user"].includes(role)) {
-        return res.status(403).json({ error: "Owner can only create admin/master/user" });
+      // ✅ Validate master password
+      const ok = await bcrypt.compare(masterPassword || "", req.dbUser.password);
+      if (!ok) {
+        return res.status(403).json({ error: "Invalid master password" });
       }
-    }
 
-    if (creatorRole === "admin") {
-      if (!["master", "user"].includes(role)) {
-        return res.status(403).json({ error: "Admin can only create master/user" });
+      // ✅ Role hierarchy validation
+      const creatorRole = req.dbUser.role;
+
+      if (creatorRole === "owner") {
+        if (!["admin", "master", "user"].includes(role)) {
+          return res
+            .status(403)
+            .json({ error: "Owner can only create admin/master/user" });
+        }
       }
-    }
 
-    if (creatorRole === "master") {
+      if (creatorRole === "admin") {
+        if (!["master", "user"].includes(role)) {
+          return res
+            .status(403)
+            .json({ error: "Admin can only create master/user" });
+        }
+      }
+
+      if (creatorRole === "master") {
+        if (role !== "user") {
+          return res
+            .status(403)
+            .json({ error: "Master can only create users" });
+        }
+      }
+
+      // ✅ Normalize and validate username
+      const cleanUsername = username.trim().toLowerCase();
+      if (cleanUsername.length < 3 || cleanUsername.length > 25) {
+        return res
+          .status(400)
+          .json({ error: "Username must be between 3 and 25 characters" });
+      }
+
+      // ✅ Check if username already exists (case-insensitive)
+      const existingUser = await User.findOne({
+        username: { $regex: new RegExp(`^${cleanUsername}$`, "i") },
+      });
+
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already taken" });
+      }
+
+      // ✅ Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // ✅ Common user data
+      const newUserData = {
+        username: cleanUsername,
+        password: hashedPassword,
+        role: role || "user",
+        domain: domain || req.dbUser.domain,
+        uplineId: uplineId || req.dbUser._id,
+        exposureLimit: exposureLimit ? Number(exposureLimit) : -1,
+        balance: Number(balance) || 0,
+        credit_reference: Number(creditReference) || 0,
+      };
+
+      // ✅ Extra fields for non-user roles (admin/master)
       if (role !== "user") {
-        return res.status(403).json({ error: "Master can only create users" });
+        newUserData.maxBalance = Number(maxBalance) || 0;
+        newUserData.my_share = Number(myShare) || 0;
+        newUserData.parent_share = Number(req.dbUser.my_share) || 0; // 🔗 parent’s share for hierarchy
       }
+
+      // ✅ Create the user
+      const user = await User.create(newUserData);
+
+      res.json({
+        success: true,
+        message: "User created successfully",
+        user,
+      });
+    } catch (err) {
+      console.error("❌ Error creating user:", err);
+      res.status(400).json({ error: "Failed to create user" });
     }
-
-    // ✅ Check username availability
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ error: "Username already taken" });
-    }
-
-    // ✅ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // ✅ Common user data
-    const newUserData = {
-      username,
-      password: hashedPassword,
-      role: role || "user",
-      domain: domain || req.dbUser.domain,
-      uplineId: uplineId || req.dbUser._id,
-      exposureLimit: exposureLimit ? Number(exposureLimit) : -1,
-      balance: Number(balance) || 0,
-      credit_reference: Number(creditReference) || 0,
-    };
-
-    // ✅ Extra fields for non-user roles (admin/master)
-    if (role !== "user") {
-      newUserData.maxBalance = Number(maxBalance) || 0;
-      newUserData.my_share = Number(myShare) || 0;
-      newUserData.client_share = Number(clientShare) || 0;
-      newUserData.parent_share = Number(req.dbUser.my_share) || 0; // 🔗 parent’s share for hierarchy
-    }
-
-    // ✅ Create the user
-    const user = await User.create(newUserData);
-
-    res.json({
-      success: true,
-      user,
-    });
-  } catch (err) {
-    console.error("❌ Error creating user:", err);
-    res.status(400).json({ error: "Failed to create user" });
   }
-});
+);
+
 
 
 // ---------------- Get all users under logged-in admin/master ----------------

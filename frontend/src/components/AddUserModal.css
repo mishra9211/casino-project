@@ -151,3 +151,22 @@ select:focus {
     opacity: 1;
   }
 }
+
+.share-section {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.share-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.share-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
