@@ -19,48 +19,87 @@ function generateToken(user, expiresIn = TOKEN_EXPIRY) {
 
 // ---------------- Register new user ----------------
 router.post("/register", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
-  const { username, password, role, domain, uplineId, exposureLimit, masterPassword } = req.body;
-  const ok = await bcrypt.compare(masterPassword || "", req.dbUser.password);
-  if (!ok) return res.status(403).json({ error: "Invalid master password" });
-
-  // ---------------- Role hierarchy rules ----------------
-  const creatorRole = req.dbUser.role;
-
-  // Owner rules
-  if (creatorRole === "owner") {
-    if (!["admin", "master", "user"].includes(role)) {
-      return res.status(403).json({ error: "Owner can only create admin/master/user" });
-    }
-  }
-
-  // Admin rules
-  if (creatorRole === "admin") {
-    if (role !== "user") return res.status(403).json({ error: "Admin can only create users" });
-  }
-
-  // Master rules
-  if (creatorRole === "master") {
-    if (role !== "user") return res.status(403).json({ error: "Master can only create users" });
-  }
-
   try {
-    const existingUser = await User.findOne({ username });
-    if (existingUser) return res.status(400).json({ error: "Username already taken" });
-
-    const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({
+    const {
       username,
-      password: hashed,
-      role: role || "user",
-      domain: domain || "",
-      balance: 0,
-      uplineId: uplineId || req.dbUser._id,
-      exposureLimit: exposureLimit || -1
-    });
+      password,
+      role,
+      domain,
+      uplineId,
+      exposureLimit,
+      masterPassword,
+      creditReference,
+      balance,
+      maxBalance,
+      myShare,
+      clientShare,
+    } = req.body;
 
-    res.json({ success: true, user });
+    // ✅ Validate master password
+    const ok = await bcrypt.compare(masterPassword || "", req.dbUser.password);
+    if (!ok) {
+      return res.status(403).json({ error: "Invalid master password" });
+    }
+
+    // ---------------- Role hierarchy rules ----------------
+    const creatorRole = req.dbUser.role;
+
+    if (creatorRole === "owner") {
+      if (!["admin", "master", "user"].includes(role)) {
+        return res.status(403).json({ error: "Owner can only create admin/master/user" });
+      }
+    }
+
+    if (creatorRole === "admin") {
+      if (!["master", "user"].includes(role)) {
+        return res.status(403).json({ error: "Admin can only create master/user" });
+      }
+    }
+
+    if (creatorRole === "master") {
+      if (role !== "user") {
+        return res.status(403).json({ error: "Master can only create users" });
+      }
+    }
+
+    // ✅ Check username availability
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: "Username already taken" });
+    }
+
+    // ✅ Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ✅ Common user data
+    const newUserData = {
+      username,
+      password: hashedPassword,
+      role: role || "user",
+      domain: domain || req.dbUser.domain,
+      uplineId: uplineId || req.dbUser._id,
+      exposureLimit: exposureLimit ? Number(exposureLimit) : -1,
+      balance: Number(balance) || 0,
+      credit_reference: Number(creditReference) || 0,
+    };
+
+    // ✅ Extra fields for non-user roles (admin/master)
+    if (role !== "user") {
+      newUserData.maxBalance = Number(maxBalance) || 0;
+      newUserData.my_share = Number(myShare) || 0;
+      newUserData.client_share = Number(clientShare) || 0;
+      newUserData.parent_share = Number(req.dbUser.my_share) || 0; // 🔗 parent’s share for hierarchy
+    }
+
+    // ✅ Create the user
+    const user = await User.create(newUserData);
+
+    res.json({
+      success: true,
+      user,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error creating user:", err);
     res.status(400).json({ error: "Failed to create user" });
   }
 });
