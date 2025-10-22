@@ -1,7 +1,7 @@
 require("dotenv").config(); // .env se MONGO_URI load karne ke liye
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const User = require("./models/User"); // path sahi hai to change na kare
+const User = require('../models/User');
 
 // ✅ MongoDB URI from your .env
 const MONGO_URI = process.env.MONGO_URI;
