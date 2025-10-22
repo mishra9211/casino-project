@@ -242,3 +242,4 @@ router.get("/ping", auth, (req, res) => {
   res.json({ status: "ok", user: { id: req.dbUser._id, username: req.dbUser.username, role: req.dbUser.role } });
 });
 
+module.exports = router;
