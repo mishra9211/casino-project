@@ -48,7 +48,7 @@ router.post(
       const maxBalanceNum = Number(maxBalance || 0);
       const incomingMyShare = Number(myShareBody || 0);
 
-      // --- Validate master password ---
+      // ✅ Master password check
       const ok = await bcrypt.compare(masterPassword || "", req.dbUser.password);
       if (!ok) {
         await session.abortTransaction();
@@ -56,30 +56,16 @@ router.post(
         return res.status(403).json({ error: "Invalid master password" });
       }
 
-      // --- Role hierarchy validation ---
+      // ✅ Role hierarchy validation
       const creatorRole = req.dbUser.role;
-      if (creatorRole === "owner" && !["admin", "master", "user"].includes(role)) {
-        await session.abortTransaction();
-        session.endSession();
+      if (creatorRole === "owner" && !["admin", "master", "user"].includes(role))
         return res.status(403).json({ error: "Owner can only create admin/master/user" });
-      }
-      if (creatorRole === "admin" && !["master", "user"].includes(role)) {
-        await session.abortTransaction();
-        session.endSession();
+      if (creatorRole === "admin" && !["master", "user"].includes(role))
         return res.status(403).json({ error: "Admin can only create master/user" });
-      }
-      if (creatorRole === "master" && role !== "user") {
-        await session.abortTransaction();
-        session.endSession();
+      if (creatorRole === "master" && role !== "user")
         return res.status(403).json({ error: "Master can only create users" });
-      }
 
-      // --- Validate username ---
-      if (!username || typeof username !== "string") {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ error: "Invalid username" });
-      }
+      // ✅ Username validation
       const cleanUsername = username.trim().toLowerCase();
       const existingUser = await User.findOne({
         username: { $regex: new RegExp(`^${cleanUsername}$`, "i") },
@@ -90,25 +76,22 @@ router.post(
         return res.status(400).json({ error: "Username already taken" });
       }
 
-      // --- Determine shares ---
+      // ✅ Share validation
       let creatorShare = Number(req.dbUser.my_share || 0);
       if (req.dbUser.role === "owner" && !creatorShare) creatorShare = 100;
 
       let finalMyShare = incomingMyShare;
       if (role !== "user") {
         if (finalMyShare < 0) finalMyShare = 0;
-        if (finalMyShare > creatorShare) {
-          await session.abortTransaction();
-          session.endSession();
+        if (finalMyShare > creatorShare)
           return res.status(400).json({
             error: `My share cannot exceed your share (${creatorShare}%)`,
           });
-        }
       }
 
       const finalParentShare = role !== "user" ? creatorShare - finalMyShare : 0;
 
-      // ✅ Validate: Credit Reference and Balance must be equal
+      // ✅ Credit Reference and Balance must be equal
       if (Number(creditReference) !== Number(balanceStr)) {
         await session.abortTransaction();
         session.endSession();
@@ -117,32 +100,34 @@ router.post(
         });
       }
 
-      // --- Check creator balance ---
-      if (creditAmount > 0) {
-        const freshCreator = await User.findById(req.dbUser._id).session(session);
-        if (!freshCreator) {
-          await session.abortTransaction();
-          session.endSession();
-          return res.status(404).json({ error: "Creator not found" });
-        }
-        const creatorBalance = Number(freshCreator.balance || 0);
-        if (creatorBalance < creditAmount) {
-          await session.abortTransaction();
-          session.endSession();
-          return res.status(400).json({
-            error: "Insufficient balance to allocate this amount",
-          });
-        }
-
-        // ✅ Deduct from creator
-        freshCreator.balance = creatorBalance - creditAmount;
-        await freshCreator.save({ session });
+      // ✅ Check balance in upline
+      const freshCreator = await User.findById(req.dbUser._id).session(session);
+      if (!freshCreator) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ error: "Creator not found" });
       }
 
-      // --- Hash password ---
+      const creatorBalance = Number(freshCreator.balance || 0);
+      if (creatorBalance < creditAmount) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          error: "Insufficient balance to allocate this amount",
+        });
+      }
+
+      // ✅ Deduct from upline balance
+      freshCreator.balance = creatorBalance - creditAmount;
+
+      // ✅ Increase upline’s player_balance
+      freshCreator.player_balance = Number(freshCreator.player_balance || 0) + creditAmount;
+      await freshCreator.save({ session });
+
+      // ✅ Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // --- Create new user ---
+      // ✅ Create new user
       const newUserData = {
         username: cleanUsername,
         password: hashedPassword,
@@ -154,8 +139,8 @@ router.post(
         maxBalance: maxBalanceNum,
         my_share: role !== "user" ? finalMyShare : 0,
         parent_share: role !== "user" ? finalParentShare : 0,
-        balance: creditAmount, // ✅ initial balance given by upline
-        player_balance: role === "user" ? creditAmount : 0, // ✅ for user, player_balance = balance
+        balance: creditAmount, // new user gets the given balance
+        player_balance: role === "user" ? creditAmount : 0,
       };
 
       const [createdUser] = await User.create([newUserData], { session });
@@ -183,7 +168,6 @@ router.post(
     }
   }
 );
-
 
 
 
