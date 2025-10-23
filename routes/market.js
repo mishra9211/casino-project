@@ -78,7 +78,7 @@ router.post("/add", auth, requireRoles(["admin", "master"]), async (req, res) =>
 // ============================
 // 🔹 ADMIN LIST MARKETS
 // ============================
-router.get("/list", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.get("/list", auth, requireRoles(["owner","admin", "master"]), async (req, res) => {
   try {
     const { category_id } = req.query;
     const query = category_id ? { category_id } : {};
@@ -93,7 +93,7 @@ router.get("/list", auth, requireRoles(["admin", "master"]), async (req, res) =>
 // ============================
 // 🔹 UPDATE MARKET
 // ============================
-router.put("/update/:id", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.put("/update/:id", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   try {
     const { match_title, category_id, open_bids, close_bids, match_type, is_active } = req.body;
     const slug = match_title.toLowerCase().replace(/ /g, "-");
@@ -127,7 +127,7 @@ router.put("/update/:id", auth, requireRoles(["admin", "master"]), async (req, r
 // ============================
 // 🔹 DELETE MARKET
 // ============================
-router.delete("/delete/:id", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.delete("/delete/:id", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   try {
     const market = await Market.findByIdAndDelete(req.params.id);
     if (!market)
@@ -277,7 +277,7 @@ router.post(
 router.post(
   "/toggle-suspend/:id",
   auth,
-  requireRoles(["admin", "master"]),
+  requireRoles(["owner", "admin", "master"]),
   async (req, res) => {
     try {
       const marketId = req.params.id;
@@ -311,7 +311,7 @@ router.post(
 );
 
 
-router.post("/update-status/:id", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.post("/update-status/:id", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   try {
     const marketId = req.params.id;
     const { is_active } = req.body;
@@ -340,4 +340,4 @@ router.post("/update-status/:id", auth, requireRoles(["admin", "master"]), async
 module.exports = router;
 
 
-module.exports = router;
+
