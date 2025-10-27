@@ -196,10 +196,17 @@ router.get("/", auth, requireRoles(["owner", "admin", "master"]), async (req, re
 
 
 router.get('/users/downline/:userId', async (req, res) => {
-  const { userId } = req.params;
-  // fetch downline users from DB
-  const downlineUsers = await User.find({ parentId: userId });
-  res.json(downlineUsers);
+  try {
+    const { userId } = req.params;
+    const downlineUsers = await User.find({ uplineId: userId }).select('-password');
+    if (!downlineUsers || downlineUsers.length === 0) {
+      return res.status(404).json({ message: 'No downline users found' });
+    }
+    res.json(downlineUsers);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 
