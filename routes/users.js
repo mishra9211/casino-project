@@ -195,17 +195,13 @@ router.get("/", auth, requireRoles(["owner", "admin", "master"]), async (req, re
 });
 
 
-router.get('/users/downline/:userId', async (req, res) => {
+router.get('/downline/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
-
-    // सिर्फ direct downline users find करें
-    const downlineUsers = await User.find({ uplineId: userId }).select('_id');
-
-    // IDs array बनाएं
-    const ids = downlineUsers.map(u => u._id);
-
-    res.json(ids); // सिर्फ IDs return करें
+    const downlineUsers = await User.find({ uplineId: userId }).select(
+      '_id username role balance player_balance credit_reference p_l exposure my_share parent_share isLocked'
+    );
+    res.json(downlineUsers);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
