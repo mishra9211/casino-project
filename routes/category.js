@@ -71,7 +71,7 @@ router.post("/add", auth, requireRoles(["admin", "master"]), async (req, res) =>
 
 
 // List all Categories
-router.get("/list", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.get("/list", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   try {
     const categories = await Category.find().sort({ created_at: -1 });
     res.json({ success: true, data: categories });

@@ -40,10 +40,10 @@
 
 /* ===== USER INFO ===== */
 .user-section {
-    background: #e2e2e2;
-  text-align: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #e5e7eb;
+  background: #f8f8f8;
+    text-align: center;
+    padding: 0px 0;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 
@@ -51,7 +51,7 @@
 .admin-container .user-section .username {
   margin: 0;
   font-size: 18px;
-  font-weight: 1000;
+  font-weight: 700;
 }
 
 .admin-container .user-section .role {
