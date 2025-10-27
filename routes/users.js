@@ -195,6 +195,15 @@ router.get("/", auth, requireRoles(["owner", "admin", "master"]), async (req, re
 });
 
 
+router.get('/users/downline/:userId', async (req, res) => {
+  const { userId } = req.params;
+  // fetch downline users from DB
+  const downlineUsers = await User.find({ parentId: userId });
+  res.json(downlineUsers);
+});
+
+
+
 // ---------------- Login with role check ----------------
 router.post("/login", async (req, res) => {
   const { username, password, panel, timezone } = req.body;

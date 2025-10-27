@@ -7,7 +7,7 @@ const Counter = require("../models/Counter");
 const { auth, requireRoles } = require("../middlewares/auth"); // agar alag file me bana hua hai
 
 // Add market matka market all
-router.post("/add", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.post("/add", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   try {
     const {
       category_id,
@@ -82,7 +82,7 @@ router.get("/list", auth, requireRoles(["owner", "admin", "master"]), async (req
 });
 
 // Update Category
-router.put("/update/:id", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.put("/update/:id", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   try {
     const { name, is_active } = req.body;
     const slug = name.toLowerCase().replace(/ /g, "-");
@@ -103,7 +103,7 @@ router.put("/update/:id", auth, requireRoles(["admin", "master"]), async (req, r
 });
 
 // Delete Category
-router.delete("/delete/:id", auth, requireRoles(["admin", "master"]), async (req, res) => {
+router.delete("/delete/:id", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
   try {
     const category = await Category.findByIdAndDelete(req.params.id);
     if (!category) return res.status(404).json({ success: false, message: "Category not found" });

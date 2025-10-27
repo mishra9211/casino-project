@@ -247,3 +247,34 @@
   z-index: 9999;
   font-weight: bold;
 }
+
+/* Exposure button/icon in Actions */
+.actions .exposure {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 1rem;
+  background-color: #2f6542d6; /* Orange color */
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.actions .exposure:hover {
+  background-color: #e92e50;
+}
+
+
+.username-link {
+  color: #2f6542;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.username-link:hover {
+  color: #1f452f;
+}

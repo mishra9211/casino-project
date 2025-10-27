@@ -38,6 +38,10 @@ const Members = () => {
   const [searchUserId, setSearchUserId] = useState("");
   const [searchTrigger, setSearchTrigger] = useState(false);
 
+  // ✅ Downline state
+  const [expandedUsers, setExpandedUsers] = useState([]);
+  const [downlines, setDownlines] = useState({});
+
   const adminData = {
     balance: parseFloat(localStorage.getItem("admin_balance")) || 0,
     credit_reference:
@@ -59,6 +63,24 @@ const Members = () => {
     }
   };
 
+  const toggleDownline = (userId) => {
+    if (expandedUsers.includes(userId)) {
+      setExpandedUsers(expandedUsers.filter((id) => id !== userId));
+    } else {
+      setExpandedUsers([...expandedUsers, userId]);
+      if (!downlines[userId]) fetchDownline(userId);
+    }
+  };
+
+  const fetchDownline = async (parentId) => {
+    try {
+      const res = await axiosInstance.get(`/users/downline/${parentId}`);
+      setDownlines((prev) => ({ ...prev, [parentId]: res.data }));
+    } catch (err) {
+      console.error("Error fetching downline:", err);
+    }
+  };
+
   // ✅ Filter users by role/tab + search
   const filteredUsers = users.filter((u) => {
     const roleMatch =
@@ -76,8 +98,7 @@ const Members = () => {
   // ✅ Pagination logic
   const totalEntries = filteredUsers.length;
   const startIndex = (currentPage - 1) * entriesPerPage;
-  const endIndex = startIndex + entriesPerPage;
-  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+  const currentUsers = filteredUsers.slice(startIndex, startIndex + entriesPerPage);
 
   // ✅ Save Lock Settings
   const handleSaveLockSettings = async (updatedLocks) => {
@@ -211,64 +232,107 @@ const Members = () => {
           <tbody>
             {currentUsers.length > 0 ? (
               currentUsers.map((u, i) => (
-                <tr key={u._id}>
-                  <td>{startIndex + i + 1}</td>
-                  <td className="username">{u.username}</td>
-                  <td>{u.credit_reference?.toLocaleString() ?? "0"}</td>
-                  <td className="green">{u.balance?.toLocaleString() ?? "0"}</td>
-                  <td>{u.player_balance?.toLocaleString() ?? "0"}</td>
-                  <td>{u.exposure ?? "0"}</td>
-                  <td className={u.p_l >= 0 ? "green" : "red"}>
-                    {u.p_l?.toLocaleString() ?? "0"}
-                  </td>
-                  <td>{u.parent_share ?? 0}%</td>
+                <React.Fragment key={u._id}>
+                  <tr>
+                    <td>{startIndex + i + 1}</td>
+                    <td className="username">
+  {u.role.toLowerCase() !== "user" ? (
+    <span
+      className="username-link"
+      style={{ cursor: "pointer", color: "#2f6542", textDecoration: "underline" }}
+      onClick={() => toggleDownline(u._id)}
+    >
+      {u.username}
+    </span>
+  ) : (
+    <span>{u.username}</span>
+  )}
+</td>
 
-                  {/* ✅ Lock */}
-                  <td className="lock-cell">
-                    {u.isLocked ? (
-                      <FaLock
-                        className="lock-icon red"
-                        title="Locked"
+                    <td>{u.credit_reference?.toLocaleString() ?? "0"}</td>
+                    <td className="green">{u.balance?.toLocaleString() ?? "0"}</td>
+                    <td>{u.player_balance?.toLocaleString() ?? "0"}</td>
+                    <td>{u.exposure ?? "0"}</td>
+                    <td className={u.p_l >= 0 ? "green" : "red"}>
+                      {u.p_l?.toLocaleString() ?? "0"}
+                    </td>
+                    <td>{u.parent_share ?? 0}%</td>
+                    <td className="lock-cell">
+                      {u.isLocked ? (
+                        <FaLock
+                          className="lock-icon red"
+                          onClick={() => {
+                            setSelectedUser(u);
+                            setShowLockModal(true);
+                          }}
+                        />
+                      ) : (
+                        <FaUnlock
+                          className="lock-icon green"
+                          onClick={() => {
+                            setSelectedUser(u);
+                            setShowLockModal(true);
+                          }}
+                        />
+                      )}
+                    </td>
+                    <td className="dw-cell">
+                      <button className="dw-btn deposit">D</button>
+                      <button className="dw-btn withdraw">W</button>
+                    </td>
+                    <td className="actions">
+                      <FaKey
+                        className="action-icon password"
                         onClick={() => {
-                          setSelectedUser(u);
-                          setShowLockModal(true);
+                          setPasswordUser(u);
+                          setShowPasswordModal(true);
                         }}
                       />
-                    ) : (
-                      <FaUnlock
-                        className="lock-icon green"
-                        title="Unlocked"
-                        onClick={() => {
-                          setSelectedUser(u);
-                          setShowLockModal(true);
-                        }}
-                      />
-                    )}
-                  </td>
+                      <FaChartLine className="action-icon pnl" />
+                      <FaCog className="action-icon settings" />
+                      <FaUserSlash className="action-icon dead" />
+                      {u.role.toLowerCase() === "user" && (
+                        <button className="action-icon exposure">E</button>
+                      )}
+                    </td>
+                  </tr>
 
-                  <td className="dw-cell">
-                    <button className="dw-btn deposit">D</button>
-                    <button className="dw-btn withdraw">W</button>
-                  </td>
-
-                  {/* ✅ Actions */}
-                  <td className="actions">
-                    <FaKey
-                      className="action-icon password"
-                      title="Password"
-                      onClick={() => {
-                        setPasswordUser(u);
-                        setShowPasswordModal(true);
-                      }}
-                    />
-                    <FaChartLine className="action-icon pnl" title="P&L" />
-                    <FaCog className="action-icon settings" title="Settings" />
-                    <FaUserSlash
-                      className="action-icon dead"
-                      title="Dead User"
-                    />
-                  </td>
-                </tr>
+                  {/* Render downline if expanded */}
+                  {expandedUsers.includes(u._id) &&
+                    downlines[u._id]?.map((child) => (
+                      <tr key={child._id} className="downline-row">
+                        <td></td>
+                        <td className="username" style={{ paddingLeft: "30px" }}>
+                          {child.username}
+                        </td>
+                        <td>{child.credit_reference?.toLocaleString() ?? "0"}</td>
+                        <td className="green">{child.balance?.toLocaleString() ?? "0"}</td>
+                        <td>{child.player_balance?.toLocaleString() ?? "0"}</td>
+                        <td>{child.exposure ?? "0"}</td>
+                        <td className={child.p_l >= 0 ? "green" : "red"}>
+                          {child.p_l?.toLocaleString() ?? "0"}
+                        </td>
+                        <td>{child.parent_share ?? 0}%</td>
+                        <td className="lock-cell">
+                          {child.isLocked ? (
+                            <FaLock className="lock-icon red" />
+                          ) : (
+                            <FaUnlock className="lock-icon green" />
+                          )}
+                        </td>
+                        <td className="dw-cell">
+                          <button className="dw-btn deposit">D</button>
+                          <button className="dw-btn withdraw">W</button>
+                        </td>
+                        <td className="actions">
+                          <FaKey className="action-icon password" />
+                          <FaChartLine className="action-icon pnl" />
+                          <FaCog className="action-icon settings" />
+                          <FaUserSlash className="action-icon dead" />
+                        </td>
+                      </tr>
+                    ))}
+                </React.Fragment>
               ))
             ) : (
               <tr>
