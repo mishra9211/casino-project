@@ -4,16 +4,16 @@ import axiosInstance from "./api/axiosInstance";
 import { jwtDecode } from "jwt-decode";
 
 // ---------------- Admin Imports ----------------
-import AdminLogin from "./pages/AdminLogin";
-import AdminLayout from "./pages/AdminLayout";
-import Dashboard from "./pages/Dashboard";
-import Market from "./pages/Market";
-import Bets from "./pages/Bets";
-import Members from "./pages/Members";
-import BannerSettings from "./pages/BannerSettings";
-import GameSettings from "./pages/GameSettings";
-import GameRules from "./pages/GameRules";
-import WorliManage from "./pages/WorliManage";
+import AdminLogin from "./admin/pages/AdminLogin";
+import AdminLayout from "./admin/pages/AdminLayout";
+import Dashboard from "./admin/pages/Dashboard";
+import Market from "./admin/pages/Market";
+import Bets from "./admin/pages/Bets";
+import Members from "./admin/pages/Members";
+import BannerSettings from "./admin/pages/BannerSettings";
+import GameSettings from "./admin/pages/GameSettings";
+import GameRules from "./admin/pages/GameRules";
+import WorliManage from "./admin/pages/WorliManage";
 
 // ---------------- User Imports ----------------
 import UserLogin from "./pages/UserLogin";
@@ -99,7 +99,7 @@ const AdminProtectedRoute = ({ children }) => {
   return children;
 };
 
-// ---------------- Wrapper Component ----------------
+// ---------------- App Wrapper ----------------
 const AppWrapper = () => {
   useAutoLogoutPing();
 
@@ -153,7 +153,6 @@ const AppWrapper = () => {
 
       {/* ---------- ADMIN ROUTES ---------- */}
       <Route path="/admin/login" element={<AdminLogin />} />
-
       <Route
         path="/admin"
         element={
@@ -180,6 +179,7 @@ const AppWrapper = () => {
 
 // ---------------- Main App ----------------
 function App() {
+  // केवल एक ही BrowserRouter
   return (
     <Router>
       <AppWrapper />

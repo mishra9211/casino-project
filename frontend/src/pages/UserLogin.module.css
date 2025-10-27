@@ -1,76 +1,99 @@
+/* UserLogin.module.css */
+@import url("https://fonts.googleapis.com/css2?family=MedievalSharp&family=Playfair+Display:wght@600&display=swap");
+
 .container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(135deg, #111, #333);
-  font-family: Arial, sans-serif;
-  background: url("/public/Casino.png") no-repeat center;
-  background-size: cover;
+  background: url("/public/DragonCityVT1.0.3.jpg") no-repeat center center/cover;
+  font-family: "Playfair Display", serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle floating glow */
+.container::before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+  animation: glowMove 15s linear infinite;
+  z-index: 0;
+}
+
+@keyframes glowMove {
+  0% { transform: translate(0, 0); opacity: 0.6; }
+  50% { transform: translate(50px, 40px); opacity: 0.8; }
+  100% { transform: translate(0, 0); opacity: 0.6; }
 }
 
 .card {
-  background: #1c1c1c;
-  color: #fff;
+  position: relative;
+  background: rgba(25, 15, 10, 0.35);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 20px;
   padding: 40px;
-  border-radius: 12px;
   text-align: center;
-  width: 320px;
-  box-shadow: 0px 4px 20px rgba(0,0,0,0.5);
+  color: #fff;
+  width: 300px;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.2);
+  backdrop-filter: blur(12px);
+  z-index: 1;
+  transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
 }
 
-.card h2 {
-  margin-bottom: 10px;
-  color: #ffd700;
-}
-
-.subtitle {
-  font-size: 14px;
-  color: #ccc;
-  margin-bottom: 20px;
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+  background: rgba(30, 20, 10, 0.45);
 }
 
 .inputGroup {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .inputGroup input {
   width: 94%;
-  padding: 10px;
-  border: none;
-  border-radius: 28px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 3px solid #d4af37;
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffecb3;
+  font-family: "Playfair Display", serif;
+  font-size: 16px;
+  text-align: center;
   outline: none;
-  background: #2c2c2c;
-  color: #fff;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.inputGroup input:focus {
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  border-color: #ffcc33;
 }
 
 .loginBtn {
-  width: 100%;
-  padding: 12px;
-  background: #ffd700;
-  color: #000;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 3px solid #b8860b;
+  background: radial-gradient(circle at center, rgba(139, 0, 0, 0.9) 0%, rgba(90, 0, 0, 0.8) 70%);
+  color: #ffd700;
+  font-family: "MedievalSharp", cursive;
+  font-size: 20px;
+  letter-spacing: 1px;
   cursor: pointer;
-  transition: 0.3s;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  transition: all 0.3s ease;
 }
 
 .loginBtn:hover {
-  background: #e6c200;
-}
-
-.registerLink {
-  margin-top: 15px;
-  font-size: 14px;
-  color: #aaa;
-}
-
-.registerLink a {
-  color: #ffd700;
-  text-decoration: none;
-}
-
-.registerLink a:hover {
-  text-decoration: underline;
+  background: radial-gradient(circle at center, rgba(170, 0, 0, 0.95) 0%, rgba(110, 0, 0, 0.9) 70%);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+  transform: scale(1.05);
 }

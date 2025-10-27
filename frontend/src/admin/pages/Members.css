@@ -1,0 +1,208 @@
+.members-page {
+  font-family: "Poppins", sans-serif;
+  background: #f8f8f8;
+  padding: 25px;
+  min-height: 100vh;
+  color: #000;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.tab-item {
+  background: #e4e4e4;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.tab-item.active {
+  font-weight: 800;
+  background: #2f6542;
+  color: #fff;
+}
+
+/* Controls */
+.top-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search-bar select,
+.search-bar input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+.go-btn,
+.add-client-btn {
+  font-weight: 800;
+  background: #2f6542;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+/* Totals */
+.totals {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.total-box {
+  background: #fff;
+  border-radius: 26px;
+  padding: 10px 30px;
+  text-align: center;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+}
+.total-box span {
+  font-size: 13px;
+  color: #666;
+}
+.total-box p {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+/* ===== User Table ===== */
+.user-table-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+
+/* Table Styling */
+.user-table {
+  width: 100%;
+  border-collapse: collapse; /* ✅ single merged borders */
+  border-spacing: 0;
+
+}
+
+.user-table th {
+  background: #2f6542;
+  color: #fff;
+  font-weight: 800;
+  padding: 12px 10px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.user-table td {
+  text-align: center;
+  padding: 12px 10px;
+  font-size: 14px;
+  color: #333;
+  vertical-align: middle;
+  border-top: 1px solid #e0e0e0; /* ✅ uniform single line across all columns */
+}
+
+.user-table tr:hover td {
+  background-color: #f5f5f5;
+}
+
+.username {
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+/* Lock icons */
+.lock-cell {
+  text-align: center;
+}
+.lock-icon {
+  font-size: 18px;
+  cursor: pointer;
+}
+.lock-icon.red {
+  color: #e74c3c;
+}
+.lock-icon.green {
+  color: #2ecc71;
+}
+
+/* D-W buttons */
+.dw-cell {
+  text-align: center;
+}
+.dw-btn {
+  margin-left: 4px;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  min-width: auto;
+  border-radius: 1rem;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 35px;
+  text-align: center;
+  border: none;
+}
+.dw-btn.deposit {
+  background-color: #44814e;
+  color: white;
+}
+.dw-btn.withdraw {
+  background-color: #e92e50;
+  color: white;
+}
+.dw-btn:hover {
+  opacity: 0.8;
+}
+
+@media (max-width: 480px) {
+  .dw-cell .dw-btn + .dw-btn {
+    margin-left: 4px;
+  }
+}
+
+/* Action icons */
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+}
+.actions svg {
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 0.2s ease;
+  margin: 0; /* ✅ removed extra spacing */
+  padding: 0;
+}
+.actions svg:hover {
+  color: #2f6542;
+}
+
+/* Success message */
+.success-text {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  font-weight: bold;
+}

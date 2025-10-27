@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../api/axiosInstance"; // ✅ shared axios instance
+import axiosInstance from '../../api/axiosInstance';
 import "./GameSettings.css";
 
 const GameSettings = () => {

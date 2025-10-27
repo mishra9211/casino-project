@@ -1,0 +1,79 @@
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+ padding: 15px 56px;
+  border-bottom: 1px solid #e6e6e6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.admin-header-title {
+  font-family: fangsong;
+ font-size: 2rem;
+    font-weight: 800;
+    color: #000;
+}
+
+.admin-header-search {
+  position: relative;
+  flex: 1;
+  max-width: 440px;
+  margin: 0 40px; /* more center spacing */
+}
+
+.admin-search-input {
+     width: 90%;
+     font-weight: 700;
+    padding: 12px 39px 15px 14px;
+    border: 1px solid #ddd;
+    border-radius: 19px;
+    font-size: 15px;
+    color: #333;
+    background-color: #fff;
+    outline: none;
+}
+
+.admin-search-input::placeholder {
+  color: #aaa;
+}
+
+.admin-search-icon {
+     position: absolute;
+    right: 4px;
+    top: 12px;
+    color: #888;
+    pointer-events: none;
+    font-size: 18px;
+
+}
+
+.admin-header-icons {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #444;
+  transition: color 0.2s ease;
+}
+
+.icon-btn:hover {
+  color: #000;
+}
+
+
+.success-text {
+  color: #2f6542; /* green for success */
+  font-size: 14px;
+  text-align: center;
+  margin: 8px 0;
+  font-weight: 600;
+}

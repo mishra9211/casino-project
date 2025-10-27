@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axiosInstance from "../api/axiosInstance"; // ✅ shared axios instance
+import axiosInstance from '../../api/axiosInstance';
 import "./GameRules.css";
 
 export default function GameRules() {

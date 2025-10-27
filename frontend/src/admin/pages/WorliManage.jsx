@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance from '../../api/axiosInstance';
 import "./WorliManage.css";
 import { FaTrash, FaBuilding, FaRegSave } from "react-icons/fa";
 import { MdCategory } from "react-icons/md";

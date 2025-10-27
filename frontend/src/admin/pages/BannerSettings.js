@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axiosInstance from "../api/axiosInstance"; // ✅ use shared axios instance
+import axiosInstance from '../../api/axiosInstance';
 import "./BannerSettings.css";
 
 const BannerSettings = () => {

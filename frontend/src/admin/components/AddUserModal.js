@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance from '../../api/axiosInstance';
 import "./AddUserModal.css";
 
 const AddUserModal = ({ onClose, currentUserId, onUserCreated }) => {
@@ -31,6 +31,8 @@ const AddUserModal = ({ onClose, currentUserId, onUserCreated }) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState(""); // ✅ new state for success
+
 
   // 🧭 When role changes → reset shares
   useEffect(() => {
@@ -87,70 +89,78 @@ const AddUserModal = ({ onClose, currentUserId, onUserCreated }) => {
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
 
-    if (form.password.trim() === "" || form.confirmPassword.trim() === "") {
-      setError("Password fields cannot be empty");
-      setLoading(false);
-      return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
+
+  if (form.password.trim() === "" || form.confirmPassword.trim() === "") {
+    setError("Password fields cannot be empty");
+    setLoading(false);
+    return;
+  }
+
+  if (form.password !== form.confirmPassword) {
+    setError("Passwords do not match");
+    setLoading(false);
+    return;
+  }
+
+  const totalShare = loggedInAdmin.myShare;
+  const totalInputShare =
+    Number(form.my_share || 0) + Number(form.client_share || 0);
+
+  if (totalInputShare > totalShare) {
+    setError(`Total share cannot exceed your share (${totalShare}%)`);
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const payload = {
+      username: form.username,
+      password: form.password,
+      role: form.role,
+      domain: form.domain,
+      uplineId: currentUserId,
+      masterPassword: form.masterPassword,
+    };
+
+    if (form.role === "user") {
+      payload.exposureLimit = form.exposureLimit || "-1";
+      payload.creditReference = form.creditReference || 0;
+      payload.balance = form.balance || 0;
+    } else {
+      payload.creditReference = form.creditReference || 0;
+      payload.balance = form.balance || 0;
+      payload.maxBalance = form.maxBalance || 0;
+      payload.my_share = form.client_share || 0;
+      payload.parent_share = form.my_share || 0;
     }
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      setLoading(false);
-      return;
+    const res = await axiosInstance.post("/users/register", payload);
+
+    // 🔥 Pass user and message to parent
+    if (onUserCreated) {
+      onUserCreated(res.data.user, res.data.message); 
+      // ✅ Pass message to Members page
     }
 
-    const totalShare = loggedInAdmin.myShare;
-    const totalInputShare =
-      Number(form.my_share || 0) + Number(form.client_share || 0);
+    onClose();
+  } catch (err) {
+    console.error(err);
+    setError(err.response?.data?.error || "Failed to create user");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    if (totalInputShare > totalShare) {
-      setError(`Total share cannot exceed your share (${totalShare}%)`);
-      setLoading(false);
-      return;
-    }
 
-    try {
-      const payload = {
-        username: form.username,
-        password: form.password,
-        role: form.role,
-        domain: form.domain,
-        uplineId: currentUserId,
-        masterPassword: form.masterPassword,
-      };
-
-      if (form.role === "user") {
-        payload.exposureLimit = form.exposureLimit || "-1";
-        payload.creditReference = form.creditReference || 0;
-        payload.balance = form.balance || 0;
-      } else {
-        payload.creditReference = form.creditReference || 0;
-        payload.balance = form.balance || 0;
-        payload.maxBalance = form.maxBalance || 0;
-        payload.my_share = form.client_share || 0; // Flip for backend
-        payload.parent_share = form.my_share || 0; // Flip for backend
-      }
-
-      const res = await axiosInstance.post("/users/register", payload);
-
-      if (onUserCreated) onUserCreated(res.data.user);
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || "Failed to create user");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-card">
+      <div className="add-modal-card">
         <h3>Add Client</h3>
         <form className="form-grid" onSubmit={handleSubmit}>
           <label>Client Base</label>
@@ -306,6 +316,8 @@ const AddUserModal = ({ onClose, currentUserId, onUserCreated }) => {
           />
 
           {error && <p className="error-text">{error}</p>}
+
+       
 
           <div className="form-actions">
             <button type="submit" className="add-btn" disabled={loading}>

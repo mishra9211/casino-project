@@ -140,7 +140,7 @@ router.post(
         my_share: role !== "user" ? finalMyShare : 0,
         parent_share: role !== "user" ? finalParentShare : 0,
         balance: creditAmount, // new user gets the given balance
-        player_balance: role === "user" ? creditAmount : 0,
+        player_balance: 0,
       };
 
       const [createdUser] = await User.create([newUserData], { session });
@@ -244,6 +244,115 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ error: "Login failed ❌" });
   }
 });
+
+router.post(
+  "/transaction",
+  auth,
+  requireRoles(["owner", "admin", "master"]),
+  async (req, res) => {
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+
+      const { targetUserId, amount, type } = req.body;
+      const transactionAmount = Number(amount || 0);
+
+      if (!["deposit", "withdraw"].includes(type)) {
+        return res.status(400).json({ error: "Invalid transaction type" });
+      }
+      if (transactionAmount <= 0) {
+        return res.status(400).json({ error: "Amount must be greater than 0" });
+      }
+
+      const upline = await User.findById(req.dbUser._id).session(session);
+      const client = await User.findById(targetUserId).session(session);
+
+      if (!client) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ error: "Target user not found" });
+      }
+
+      // ✅ Hierarchy check: upline must be direct/indirect parent or owner
+      const isChild = async (parentId, childId) => {
+        const child = await User.findById(childId).session(session);
+        if (!child) return false;
+        if (child.uplineId.equals(parentId)) return true;
+        if (child.uplineId) return isChild(parentId, child.uplineId);
+        return false;
+      };
+
+      const allowed = upline.role === "owner" || (await isChild(upline._id, client._id));
+      if (!allowed) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(403).json({ error: "You cannot update this user's balance" });
+      }
+
+      if (type === "deposit") {
+        // Upline must have enough balance
+        if (upline.balance < transactionAmount) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({ error: "Insufficient balance in upline" });
+        }
+
+        // Deduct from upline & increase player_balance
+        upline.balance -= transactionAmount;
+        upline.player_balance += transactionAmount;
+        await upline.save({ session });
+
+        // Add to client & update credit_reference
+        client.balance += transactionAmount;
+        client.credit_reference = client.balance;
+        await client.save({ session });
+
+        await session.commitTransaction();
+        session.endSession();
+        return res.json({
+          success: true,
+          message: `Deposited ${transactionAmount} to ${client.username}`,
+          upline: { balance: upline.balance, player_balance: upline.player_balance },
+          client: { balance: client.balance, credit_reference: client.credit_reference },
+        });
+      }
+
+      if (type === "withdraw") {
+        // Client must have enough balance
+        if (client.balance < transactionAmount) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({ error: "Insufficient balance in client" });
+        }
+
+        // Deduct from client & update credit_reference
+        client.balance -= transactionAmount;
+        client.credit_reference = client.balance;
+        await client.save({ session });
+
+        // Add back to upline & decrease player_balance
+        upline.balance += transactionAmount;
+        upline.player_balance -= transactionAmount;
+        if (upline.player_balance < 0) upline.player_balance = 0;
+        await upline.save({ session });
+
+        await session.commitTransaction();
+        session.endSession();
+        return res.json({
+          success: true,
+          message: `Withdrew ${transactionAmount} from ${client.username}`,
+          upline: { balance: upline.balance, player_balance: upline.player_balance },
+          client: { balance: client.balance, credit_reference: client.credit_reference },
+        });
+      }
+    } catch (err) {
+      console.error("Transaction error:", err);
+      try { await session.abortTransaction(); } catch (e) { console.error(e); }
+      session.endSession();
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
 
 
 
