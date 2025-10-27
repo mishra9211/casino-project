@@ -73,13 +73,14 @@ const Members = () => {
   };
 
   const fetchDownline = async (parentId) => {
-    try {
-      const res = await axiosInstance.get(`/users/downline/${parentId}`);
-      setDownlines((prev) => ({ ...prev, [parentId]: res.data }));
-    } catch (err) {
-      console.error("Error fetching downline:", err);
-    }
-  };
+  try {
+    const res = await axiosInstance.get(`/users/downline/${parentId}`);
+    // res.data में सिर्फ {_id, username} होंगे
+    setDownlines((prev) => ({ ...prev, [parentId]: res.data }));
+  } catch (err) {
+    console.error("Error fetching downline:", err);
+  }
+};
 
   // ✅ Filter users by role/tab + search
   const filteredUsers = users.filter((u) => {
