@@ -23,7 +23,9 @@ import {
 const Members = () => {
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("User");
+  const [activeTab, setActiveTab] = useState(() => {
+  return localStorage.getItem("members_activeTab") || "User";
+});
   const [successMessage, setSuccessMessage] = useState("");
 
   // ✅ Lock Settings Modal States
@@ -146,20 +148,22 @@ const [dwUser, setDwUser] = useState(null);
 
       {/* ===== Tabs ===== */}
       <div className="tabs">
-        {["Admin", "Master", "User", "Dead Members"].map((tab) => (
-          <button
-            key={tab}
-            className={`tab-item ${tab === activeTab ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab(tab);
-              setCurrentPage(1);
-              setSearchTrigger(false);
-            }}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+  {["Admin", "Master", "User", "Dead Members"].map((tab) => (
+    <button
+      key={tab}
+      className={`tab-item ${tab === activeTab ? "active" : ""}`}
+      onClick={() => {
+        setActiveTab(tab);
+        localStorage.setItem("members_activeTab", tab); // ✅ Save selected tab
+        setCurrentPage(1);
+        setSearchTrigger(false);
+      }}
+    >
+      {tab}
+    </button>
+  ))}
+</div>
+
 
       {/* ===== Top Controls ===== */}
       <div className="top-controls">
