@@ -3,14 +3,9 @@ import axiosInstance from "../../api/axiosInstance";
 import AddUserModal from "../components/AddUserModal";
 import Pagination from "./Pagination";
 import "./Members.css";
-import "./LockSettingsModal.jsx"; // ✅ Added for Lock Modal
-import LockSettingsModal from "./LockSettingsModal.jsx"; // ✅ Proper import
-import UpdatePasswordModal from "./UpdatePasswordModal.jsx"; // ✅ New Password Modal Import
-import { useNavigate } from "react-router-dom";
-import DepositModal from "./DepositModal";
-import WithdrawModal from "./WithdrawModal";
-
-
+import LockSettingsModal from "./LockSettingsModal.jsx";
+import UpdatePasswordModal from "./UpdatePasswordModal.jsx";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   FaKey,
   FaChartLine,
@@ -20,62 +15,54 @@ import {
   FaUnlock,
 } from "react-icons/fa";
 
-const Members = () => {
+const MembersInner = () => {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("Admin");
+  const [activeTab, setActiveTab] = useState("User");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // ✅ Lock Settings Modal States
+  // Lock modal
   const [showLockModal, setShowLockModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // ✅ Password Modal State
+  // Password modal
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordUser, setPasswordUser] = useState(null);
 
-  // ✅ Pagination States
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
 
-  // ✅ Search state
+  // Search
   const [searchUserId, setSearchUserId] = useState("");
   const [searchTrigger, setSearchTrigger] = useState(false);
 
-  // ✅ Downline state
+  // Downline
   const [expandedUsers, setExpandedUsers] = useState([]);
   const [downlines, setDownlines] = useState({});
 
-  const navigate = useNavigate();
-
-
-  const adminData = {
-    balance: parseFloat(localStorage.getItem("admin_balance")) || 0,
-    credit_reference:
-      parseFloat(localStorage.getItem("admin_credit_reference")) || 0,
-    exposure: parseFloat(localStorage.getItem("admin_exposure")) || 0,
-    p_l: parseFloat(localStorage.getItem("admin_p_l")) || 0,
+  const fetchUsers = async () => {
+    try {
+      const res = await axiosInstance.get(`/users/downline/${userId}`);
+      setUsers(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch downline users:", err);
+    }
   };
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [userId]);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await axiosInstance.get("/users");
-      setUsers(res.data || []);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    }
-  };
-
-  const toggleDownline = (userId) => {
-    if (expandedUsers.includes(userId)) {
-      setExpandedUsers(expandedUsers.filter((id) => id !== userId));
+  const toggleDownline = (id) => {
+    if (expandedUsers.includes(id)) {
+      setExpandedUsers(expandedUsers.filter((x) => x !== id));
     } else {
-      setExpandedUsers([...expandedUsers, userId]);
-      if (!downlines[userId]) fetchDownline(userId);
+      setExpandedUsers([...expandedUsers, id]);
+      if (!downlines[id]) fetchDownline(id);
     }
   };
 
@@ -84,11 +71,10 @@ const Members = () => {
       const res = await axiosInstance.get(`/users/downline/${parentId}`);
       setDownlines((prev) => ({ ...prev, [parentId]: res.data }));
     } catch (err) {
-      console.error("Error fetching downline:", err);
+      console.error(err);
     }
   };
 
-  // ✅ Filter users by role/tab + search
   const filteredUsers = users.filter((u) => {
     const roleMatch =
       activeTab === "Client Statements" ||
@@ -102,12 +88,13 @@ const Members = () => {
     return roleMatch && searchMatch;
   });
 
-  // ✅ Pagination logic
   const totalEntries = filteredUsers.length;
   const startIndex = (currentPage - 1) * entriesPerPage;
-  const currentUsers = filteredUsers.slice(startIndex, startIndex + entriesPerPage);
+  const currentUsers = filteredUsers.slice(
+    startIndex,
+    startIndex + entriesPerPage
+  );
 
-  // ✅ Save Lock Settings
   const handleSaveLockSettings = async (updatedLocks) => {
     try {
       if (!selectedUser) return;
@@ -116,11 +103,10 @@ const Members = () => {
       setTimeout(() => setSuccessMessage(""), 4000);
       fetchUsers();
     } catch (err) {
-      console.error("Error updating lock settings:", err);
+      console.error(err);
     }
   };
 
-  // ✅ Update Password
   const handlePasswordUpdate = async (newPassword) => {
     try {
       if (!passwordUser) return;
@@ -131,20 +117,19 @@ const Members = () => {
       setTimeout(() => setSuccessMessage(""), 4000);
       fetchUsers();
     } catch (err) {
-      console.error("Error updating password:", err);
+      console.error(err);
     }
   };
 
-  const [showDepositModal, setShowDepositModal] = useState(false);
-const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-const [dwUser, setDwUser] = useState(null);
-
   return (
     <div className="members-page">
-      {/* ===== Success Toast ===== */}
       {successMessage && <div className="success-toast">{successMessage}</div>}
 
-      {/* ===== Tabs ===== */}
+      <button className="back-button" onClick={() => navigate(-1)}>
+  ← Back
+</button>
+
+      {/* Tabs */}
       <div className="tabs">
         {["Admin", "Master", "User", "Dead Members"].map((tab) => (
           <button
@@ -161,7 +146,7 @@ const [dwUser, setDwUser] = useState(null);
         ))}
       </div>
 
-      {/* ===== Top Controls ===== */}
+      {/* Top controls */}
       <div className="top-controls">
         <div className="search-bar">
           <select>
@@ -172,56 +157,23 @@ const [dwUser, setDwUser] = useState(null);
             placeholder="Enter 3 digits"
             value={searchUserId}
             onChange={(e) => {
-              const val = e.target.value;
-              setSearchUserId(val);
-              if (val.trim() === "") {
-                setSearchTrigger(false);
-                setCurrentPage(1);
-              }
+              setSearchUserId(e.target.value);
+              if (e.target.value.trim() === "") setSearchTrigger(false);
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setSearchTrigger(true);
-                setCurrentPage(1);
-              }
+              if (e.key === "Enter") setSearchTrigger(true);
             }}
           />
           <button
             className="go-btn"
-            onClick={() => {
-              setSearchTrigger(true);
-              setCurrentPage(1);
-            }}
+            onClick={() => setSearchTrigger(true)}
           >
             Go
           </button>
         </div>
-
-        <div className="totals">
-          <div className="total-box">
-            <span>Credit Reference</span>
-            <p>{adminData.credit_reference.toLocaleString()}</p>
-          </div>
-          <div className="total-box">
-            <span>Available Balance</span>
-            <p>{adminData.balance.toLocaleString()}</p>
-          </div>
-          <div className="total-box">
-            <span>Total Exposure</span>
-            <p>{adminData.exposure.toLocaleString()}</p>
-          </div>
-          <div className="total-box">
-            <span>Total Profit</span>
-            <p>{adminData.p_l.toLocaleString()}</p>
-          </div>
-        </div>
-
-        <button className="add-client-btn" onClick={() => setShowModal(true)}>
-          ADD CLIENT
-        </button>
       </div>
 
-      {/* ===== User Table ===== */}
+      {/* User Table */}
       <div className="user-table-container">
         <table className="user-table">
           <thead>
@@ -239,25 +191,24 @@ const [dwUser, setDwUser] = useState(null);
               <th>Action</th>
             </tr>
           </thead>
-
           <tbody>
             {currentUsers.length > 0 ? (
               currentUsers.map((u, i) => (
                 <React.Fragment key={u._id}>
                   <tr>
                     <td>{startIndex + i + 1}</td>
-                   <td className="username">
-  {u.role.toLowerCase() !== "user" ? (
-    <span
-      className="username-link"
-      onClick={() => navigate(`/admin/members/${u._id}`)}
-    >
-      {u.username}
-    </span>
-  ) : (
-    <span>{u.username}</span>
-  )}
-</td>
+                    <td className="username">
+                      {u.role.toLowerCase() !== "user" ? (
+                        <span
+                          className="username-link"
+                          onClick={() => navigate(`/admin/members/${u._id}`)}
+                        >
+                          {u.username}
+                        </span>
+                      ) : (
+                        u.username
+                      )}
+                    </td>
                     <td>{u.credit_reference?.toLocaleString() ?? "0"}</td>
                     <td className="green">{u.balance?.toLocaleString() ?? "0"}</td>
                     <td>{u.player_balance?.toLocaleString() ?? "0"}</td>
@@ -286,26 +237,9 @@ const [dwUser, setDwUser] = useState(null);
                       )}
                     </td>
                     <td className="dw-cell">
-  <button
-    className="dw-btn deposit"
-    onClick={() => {
-      setDwUser(u);
-      setShowDepositModal(true);
-    }}
-  >
-    D
-  </button>
-  <button
-    className="dw-btn withdraw"
-    onClick={() => {
-      setDwUser(u);
-      setShowWithdrawModal(true);
-    }}
-  >
-    W
-  </button>
-</td>
-
+                      <button className="dw-btn deposit">D</button>
+                      <button className="dw-btn withdraw">W</button>
+                    </td>
                     <td className="actions">
                       <FaKey
                         className="action-icon password"
@@ -323,7 +257,7 @@ const [dwUser, setDwUser] = useState(null);
                     </td>
                   </tr>
 
-                  {/* Render downline if expanded */}
+                  {/* Render downline */}
                   {expandedUsers.includes(u._id) &&
                     downlines[u._id]?.map((child) => (
                       <tr key={child._id} className="downline-row">
@@ -371,7 +305,7 @@ const [dwUser, setDwUser] = useState(null);
         </table>
       </div>
 
-      {/* ===== Pagination ===== */}
+      {/* Pagination */}
       {totalEntries > 10 && (
         <Pagination
           totalEntries={totalEntries}
@@ -382,7 +316,7 @@ const [dwUser, setDwUser] = useState(null);
         />
       )}
 
-      {/* ===== Add User Modal ===== */}
+      {/* Add User Modal */}
       {showModal && (
         <AddUserModal
           onClose={() => setShowModal(false)}
@@ -396,7 +330,7 @@ const [dwUser, setDwUser] = useState(null);
         />
       )}
 
-      {/* ===== Lock Settings Modal ===== */}
+      {/* Lock Modal */}
       {showLockModal && selectedUser && (
         <LockSettingsModal
           user={selectedUser}
@@ -405,38 +339,15 @@ const [dwUser, setDwUser] = useState(null);
         />
       )}
 
-      {/* ===== Update Password Modal ===== */}
+      {/* Password Modal */}
       {showPasswordModal && passwordUser && (
         <UpdatePasswordModal
           onClose={() => setShowPasswordModal(false)}
           onSubmit={(newPassword) => handlePasswordUpdate(newPassword)}
         />
       )}
-
-      {showDepositModal && dwUser && (
-  <DepositModal
-    user={dwUser}
-    onClose={() => setShowDepositModal(false)}
-    onSubmit={(data) => {
-      console.log("Deposit data:", data);
-      setShowDepositModal(false);
-    }}
-  />
-)}
-
-{showWithdrawModal && dwUser && (
-  <WithdrawModal
-    user={dwUser}
-    onClose={() => setShowWithdrawModal(false)}
-    onSubmit={(data) => {
-      console.log("Withdraw data:", data);
-      setShowWithdrawModal(false);
-    }}
-  />
-)}
-
     </div>
   );
 };
 
-export default Members;
+export default MembersInner;

@@ -14,6 +14,8 @@ import BannerSettings from "./admin/pages/BannerSettings";
 import GameSettings from "./admin/pages/GameSettings";
 import GameRules from "./admin/pages/GameRules";
 import WorliManage from "./admin/pages/WorliManage";
+import MembersInner from "./admin/pages/MembersInner"; // import करें
+
 
 // ---------------- User Imports ----------------
 import UserLogin from "./pages/UserLogin";
@@ -169,6 +171,8 @@ const AppWrapper = () => {
         <Route path="games" element={<GameSettings />} />
         <Route path="game-rules" element={<GameRules />} />
         <Route path="worli-manage" element={<WorliManage />} />
+        <Route path="/admin/members/:userId" element={<MembersInner />} />
+
       </Route>
 
       {/* ---------- DEFAULT FALLBACK ---------- */}

@@ -82,10 +82,16 @@ const AdminLayout = () => {
   return (
     <div className="admin-container">
       {/* Sidebar */}
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <img src="/getid-logo-0p1Smfhr.webp" alt="Logo" className="main-logo" />
-        </div>
+       <div className="sidebar">
+      <div className="sidebar-header">
+        <img
+          src="/getid-logo-0p1Smfhr.webp"
+          alt="Logo"
+          className="main-logo"
+          style={{ cursor: "pointer" }}
+          onClick={() => navigate("/admin/dashboard")}
+        />
+      </div>
 
        <div className="user-section">
   <h3 className="username">{username || "Admin"}</h3>

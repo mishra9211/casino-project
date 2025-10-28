@@ -217,6 +217,7 @@
 
 /* Action icons */
 .actions {
+      margin-top: 7px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -273,8 +274,31 @@
   color: #2f6542;
   font-weight: 600;
   text-decoration: underline;
+  cursor: pointer; /* 🔥 Add this line */
 }
 
 .username-link:hover {
   color: #1f452f;
 }
+
+.back-button {
+  background: #3a8451;
+  border: none;
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 10px;
+}
+
+.back-button:hover {
+  background: #327546;
+  transform: translateY(-1px);
+}
+
+.back-button:active {
+  transform: scale(0.97);
+}
+
