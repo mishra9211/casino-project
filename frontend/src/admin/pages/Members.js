@@ -23,7 +23,7 @@ import {
 const Members = () => {
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("Admin");
+  const [activeTab, setActiveTab] = useState("User");
   const [successMessage, setSuccessMessage] = useState("");
 
   // ✅ Lock Settings Modal States
