@@ -5,6 +5,8 @@ import Pagination from "./Pagination";
 import "./Members.css";
 import LockSettingsModal from "./LockSettingsModal.jsx";
 import UpdatePasswordModal from "./UpdatePasswordModal.jsx";
+import DepositModal from "./DepositModal";
+import WithdrawModal from "./WithdrawModal";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FaKey,
@@ -43,6 +45,11 @@ const MembersInner = () => {
   // Downline
   const [expandedUsers, setExpandedUsers] = useState([]);
   const [downlines, setDownlines] = useState({});
+
+  // 💰 Deposit/Withdraw states
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [dwUser, setDwUser] = useState(null);
 
   const fetchUsers = async () => {
     try {
@@ -126,8 +133,8 @@ const MembersInner = () => {
       {successMessage && <div className="success-toast">{successMessage}</div>}
 
       <button className="back-button" onClick={() => navigate(-1)}>
-  ← Back
-</button>
+        ← Back
+      </button>
 
       {/* Tabs */}
       <div className="tabs">
@@ -164,10 +171,7 @@ const MembersInner = () => {
               if (e.key === "Enter") setSearchTrigger(true);
             }}
           />
-          <button
-            className="go-btn"
-            onClick={() => setSearchTrigger(true)}
-          >
+          <button className="go-btn" onClick={() => setSearchTrigger(true)}>
             Go
           </button>
         </div>
@@ -210,7 +214,9 @@ const MembersInner = () => {
                       )}
                     </td>
                     <td>{u.credit_reference?.toLocaleString() ?? "0"}</td>
-                    <td className="green">{u.balance?.toLocaleString() ?? "0"}</td>
+                    <td className="green">
+                      {u.balance?.toLocaleString() ?? "0"}
+                    </td>
                     <td>{u.player_balance?.toLocaleString() ?? "0"}</td>
                     <td>{u.exposure ?? "0"}</td>
                     <td className={u.p_l >= 0 ? "green" : "red"}>
@@ -237,8 +243,24 @@ const MembersInner = () => {
                       )}
                     </td>
                     <td className="dw-cell">
-                      <button className="dw-btn deposit">D</button>
-                      <button className="dw-btn withdraw">W</button>
+                      <button
+                        className="dw-btn deposit"
+                        onClick={() => {
+                          setDwUser(u);
+                          setShowDepositModal(true);
+                        }}
+                      >
+                        D
+                      </button>
+                      <button
+                        className="dw-btn withdraw"
+                        onClick={() => {
+                          setDwUser(u);
+                          setShowWithdrawModal(true);
+                        }}
+                      >
+                        W
+                      </button>
                     </td>
                     <td className="actions">
                       <FaKey
@@ -256,42 +278,6 @@ const MembersInner = () => {
                       )}
                     </td>
                   </tr>
-
-                  {/* Render downline */}
-                  {expandedUsers.includes(u._id) &&
-                    downlines[u._id]?.map((child) => (
-                      <tr key={child._id} className="downline-row">
-                        <td></td>
-                        <td className="username" style={{ paddingLeft: "30px" }}>
-                          {child.username}
-                        </td>
-                        <td>{child.credit_reference?.toLocaleString() ?? "0"}</td>
-                        <td className="green">{child.balance?.toLocaleString() ?? "0"}</td>
-                        <td>{child.player_balance?.toLocaleString() ?? "0"}</td>
-                        <td>{child.exposure ?? "0"}</td>
-                        <td className={child.p_l >= 0 ? "green" : "red"}>
-                          {child.p_l?.toLocaleString() ?? "0"}
-                        </td>
-                        <td>{child.parent_share ?? 0}%</td>
-                        <td className="lock-cell">
-                          {child.isLocked ? (
-                            <FaLock className="lock-icon red" />
-                          ) : (
-                            <FaUnlock className="lock-icon green" />
-                          )}
-                        </td>
-                        <td className="dw-cell">
-                          <button className="dw-btn deposit">D</button>
-                          <button className="dw-btn withdraw">W</button>
-                        </td>
-                        <td className="actions">
-                          <FaKey className="action-icon password" />
-                          <FaChartLine className="action-icon pnl" />
-                          <FaCog className="action-icon settings" />
-                          <FaUserSlash className="action-icon dead" />
-                        </td>
-                      </tr>
-                    ))}
                 </React.Fragment>
               ))
             ) : (
@@ -344,6 +330,30 @@ const MembersInner = () => {
         <UpdatePasswordModal
           onClose={() => setShowPasswordModal(false)}
           onSubmit={(newPassword) => handlePasswordUpdate(newPassword)}
+        />
+      )}
+
+      {/* 💰 Deposit Modal */}
+      {showDepositModal && dwUser && (
+        <DepositModal
+          user={dwUser}
+          onClose={() => setShowDepositModal(false)}
+          onSubmit={(data) => {
+            console.log("Deposit data:", data);
+            setShowDepositModal(false);
+          }}
+        />
+      )}
+
+      {/* 💸 Withdraw Modal */}
+      {showWithdrawModal && dwUser && (
+        <WithdrawModal
+          user={dwUser}
+          onClose={() => setShowWithdrawModal(false)}
+          onSubmit={(data) => {
+            console.log("Withdraw data:", data);
+            setShowWithdrawModal(false);
+          }}
         />
       )}
     </div>

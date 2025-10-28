@@ -271,7 +271,7 @@ router.post(
       const { targetUserId, amount, type } = req.body;
       const transactionAmount = Number(amount || 0);
 
-      // 🔍 Validation
+      // Validation
       if (!["deposit", "withdraw"].includes(type)) {
         return res.status(400).json({ error: "Invalid transaction type" });
       }
@@ -279,8 +279,9 @@ router.post(
         return res.status(400).json({ error: "Amount must be greater than 0" });
       }
 
-      // 🔍 Find upline & client
-      const upline = await User.findById(req.dbUser._id).session(session);
+      // Acting user (requester)
+      const actingUser = await User.findById(req.dbUser._id).session(session);
+      // Client
       const client = await User.findById(targetUserId).session(session);
 
       if (!client) {
@@ -289,58 +290,63 @@ router.post(
         return res.status(404).json({ error: "Target user not found" });
       }
 
-      // ✅ Hierarchy validation
+      // Hierarchy validation
       const isChild = async (parentId, childId) => {
         const child = await User.findById(childId).session(session);
         if (!child) return false;
-        if (child.uplineId.equals(parentId)) return true;
+        if (child.uplineId && child.uplineId.equals(parentId)) return true;
         if (child.uplineId) return isChild(parentId, child.uplineId);
         return false;
       };
 
       const allowed =
-        upline.role === "owner" || (await isChild(upline._id, client._id));
+        actingUser.role === "owner" || (await isChild(actingUser._id, client._id));
       if (!allowed) {
         await session.abortTransaction();
         session.endSession();
-        return res
-          .status(403)
-          .json({ error: "You cannot update this user's balance" });
+        return res.status(403).json({ error: "You cannot update this user's balance" });
       }
+
+      // ---------- Determine sourceUser (client's direct upline) ----------
+      if (!client.uplineId) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ error: "Client has no upline for transaction" });
+      }
+
+      const sourceUser = await User.findById(client.uplineId).session(session);
+      if (!sourceUser) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ error: "Upline user not found" });
+      }
+
+      // Helper to recalc credit_reference
+      const recalcCredit = (user) => {
+        if (["owner", "admin", "master"].includes(user.role)) {
+          user.credit_reference = (user.balance || 0) + (user.player_balance || 0);
+        } else {
+          user.credit_reference = user.balance || 0;
+        }
+      };
 
       // ---------------------- DEPOSIT ----------------------
       if (type === "deposit") {
-        if (upline.balance < transactionAmount) {
+        if (sourceUser.balance < transactionAmount) {
           await session.abortTransaction();
           session.endSession();
-          return res
-            .status(400)
-            .json({ error: "Insufficient balance in upline" });
+          return res.status(400).json({ error: "Insufficient balance in upline" });
         }
 
-        // 🔸 Deduct from upline
-        upline.balance -= transactionAmount;
-        upline.player_balance += transactionAmount;
+        // Deduct from upline
+        sourceUser.balance -= transactionAmount;
+        sourceUser.player_balance += transactionAmount;
+        recalcCredit(sourceUser);
+        await sourceUser.save({ session });
 
-        // 🔹 Recalculate upline's credit_reference
-        if (["owner", "admin", "master"].includes(upline.role)) {
-          upline.credit_reference =
-            (upline.balance || 0) + (upline.player_balance || 0);
-        } else {
-          upline.credit_reference = upline.balance;
-        }
-        await upline.save({ session });
-
-        // 🔸 Add to client
+        // Add to client
         client.balance += transactionAmount;
-
-        // 🔹 Recalculate client's credit_reference
-        if (["owner", "admin", "master"].includes(client.role)) {
-          client.credit_reference =
-            (client.balance || 0) + (client.player_balance || 0);
-        } else {
-          client.credit_reference = client.balance;
-        }
+        recalcCredit(client);
         await client.save({ session });
 
         await session.commitTransaction();
@@ -350,11 +356,15 @@ router.post(
           success: true,
           message: `Deposited ${transactionAmount} to ${client.username}`,
           upline: {
-            balance: upline.balance,
-            player_balance: upline.player_balance,
-            credit_reference: upline.credit_reference,
+            id: sourceUser._id,
+            username: sourceUser.username,
+            balance: sourceUser.balance,
+            player_balance: sourceUser.player_balance,
+            credit_reference: sourceUser.credit_reference,
           },
           client: {
+            id: client._id,
+            username: client.username,
             balance: client.balance,
             credit_reference: client.credit_reference,
           },
@@ -366,36 +376,20 @@ router.post(
         if (client.balance < transactionAmount) {
           await session.abortTransaction();
           session.endSession();
-          return res
-            .status(400)
-            .json({ error: "Insufficient balance in client" });
+          return res.status(400).json({ error: "Insufficient balance in client" });
         }
 
-        // 🔸 Deduct from client
+        // Deduct from client
         client.balance -= transactionAmount;
-
-        // 🔹 Recalculate client's credit_reference
-        if (["owner", "admin", "master"].includes(client.role)) {
-          client.credit_reference =
-            (client.balance || 0) + (client.player_balance || 0);
-        } else {
-          client.credit_reference = client.balance;
-        }
+        recalcCredit(client);
         await client.save({ session });
 
-        // 🔸 Add to upline
-        upline.balance += transactionAmount;
-        upline.player_balance -= transactionAmount;
-        if (upline.player_balance < 0) upline.player_balance = 0;
-
-        // 🔹 Recalculate upline's credit_reference
-        if (["owner", "admin", "master"].includes(upline.role)) {
-          upline.credit_reference =
-            (upline.balance || 0) + (upline.player_balance || 0);
-        } else {
-          upline.credit_reference = upline.balance;
-        }
-        await upline.save({ session });
+        // Add to upline
+        sourceUser.balance += transactionAmount;
+        sourceUser.player_balance -= transactionAmount;
+        if (sourceUser.player_balance < 0) sourceUser.player_balance = 0;
+        recalcCredit(sourceUser);
+        await sourceUser.save({ session });
 
         await session.commitTransaction();
         session.endSession();
@@ -404,11 +398,15 @@ router.post(
           success: true,
           message: `Withdrew ${transactionAmount} from ${client.username}`,
           upline: {
-            balance: upline.balance,
-            player_balance: upline.player_balance,
-            credit_reference: upline.credit_reference,
+            id: sourceUser._id,
+            username: sourceUser.username,
+            balance: sourceUser.balance,
+            player_balance: sourceUser.player_balance,
+            credit_reference: sourceUser.credit_reference,
           },
           client: {
+            id: client._id,
+            username: client.username,
             balance: client.balance,
             credit_reference: client.credit_reference,
           },
@@ -416,20 +414,12 @@ router.post(
       }
     } catch (err) {
       console.error("Transaction error:", err);
-      try {
-        await session.abortTransaction();
-      } catch (e) {
-        console.error(e);
-      }
+      try { await session.abortTransaction(); } catch (e) { console.error(e); }
       session.endSession();
       return res.status(500).json({ error: "Internal server error" });
     }
   }
 );
-
-
-
-
 
 // ---------------- Ping route for auto logout ----------------
 router.get("/ping", auth, (req, res) => {
