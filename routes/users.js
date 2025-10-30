@@ -473,34 +473,38 @@ router.put(
         return isDownline(parentId, child.uplineId);
       }
 
-      // ✅ Role-based permission check
+      // Role-based permission check
       if (["owner", "admin", "master"].includes(loggedInUser.role)) {
         if (!(await isDownline(loggedInUser._id, targetUser._id))) {
           return res.status(403).json({ error: "Cannot change password of this user" });
         }
       }
 
-      // ✅ Hash the new password
+      // Hash the new password
       const hashed = await bcrypt.hash(password, 10);
       targetUser.password = hashed;
 
-      // ✅ Invalidate old tokens
+      // Invalidate old tokens
       targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
       await targetUser.save();
 
-      // ✅ Force Logout via Socket.io
-      const io = getIo(); // get io instance
-      const connectedUsers = getConnectedUsers(); // get socket map
+      // Force Logout via Socket.io on all connected devices
+      const io = getIo();
+      const connectedUsers = getConnectedUsers(); // Map<userId, [socketId1, socketId2...]>
+      const userSockets = connectedUsers.get(targetUser._id.toString()) || [];
 
-      const socketId = connectedUsers.get(targetUser._id.toString());
-      if (socketId && io) {
-        io.to(socketId).emit("forceLogout", { message: "Password changed. Please login again." });
-        connectedUsers.delete(targetUser._id.toString());
-      }
+      userSockets.forEach((socketId) => {
+        io.to(socketId).emit("forceLogout", {
+          message: "Password changed. Please login again.",
+        });
+      });
+
+      // Remove all sockets for this user
+      connectedUsers.delete(targetUser._id.toString());
 
       return res.json({
         success: true,
-        message: "Password updated successfully and user logged out.",
+        message: "Password updated successfully and user logged out from all devices.",
       });
     } catch (err) {
       console.error("Password update error:", err);
@@ -508,6 +512,7 @@ router.put(
     }
   }
 );
+
 
 
 
