@@ -35,27 +35,36 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ Map to track connected users
-const { setIo, getConnectedUsers } = require("./utils/socketStore");
+// Map to track connected users: userId → Set of socketIds
+const { setIo, getConnectedUsers, getIo } = require("./utils/socketStore");
 
-// Socket.io
-// Socket.io
+// Initialize map as Map<userId, Set<socketId>>
+const connectedUsers = getConnectedUsers();
+
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   // Register userId with socket
   socket.on("register", (userId) => {
-    getConnectedUsers().set(userId, socket.id);
-    console.log("Registered socket for user:", userId);
+    if (!connectedUsers.has(userId)) {
+      connectedUsers.set(userId, new Set());
+    }
+    connectedUsers.get(userId).add(socket.id);
+    console.log("Registered socket for user:", userId, Array.from(connectedUsers.get(userId)));
   });
 
   // Disconnect handler
   socket.on("disconnect", () => {
-    for (const [userId, id] of getConnectedUsers().entries()) {
-      if (id === socket.id) getConnectedUsers().delete(userId);
+    for (const [userId, socketSet] of connectedUsers.entries()) {
+      if (socketSet.has(socket.id)) {
+        socketSet.delete(socket.id);
+        if (socketSet.size === 0) connectedUsers.delete(userId);
+      }
     }
     console.log("User disconnected:", socket.id);
   });
 });
+
 
 setIo(io); // ✅ store io globally
 

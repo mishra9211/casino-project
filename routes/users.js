@@ -488,19 +488,25 @@ router.put(
       targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
       await targetUser.save();
 
-      // Force Logout via Socket.io on all connected devices
+      // ---------------- Force Logout via Socket.io ----------------
       const io = getIo();
-      const connectedUsers = getConnectedUsers(); // Map<userId, [socketId1, socketId2...]>
-      const userSockets = connectedUsers.get(targetUser._id.toString()) || [];
+      const connectedUsers = getConnectedUsers(); // Map<userId, Set of socketIds>
 
-      userSockets.forEach((socketId) => {
-        io.to(socketId).emit("forceLogout", {
-          message: "Password changed. Please login again.",
+      // Ensure value is a Set (multi-device support)
+      let userSockets = connectedUsers.get(targetUser._id.toString());
+      if (userSockets && !(userSockets instanceof Set)) {
+        userSockets = new Set([userSockets]);
+      }
+
+      if (userSockets && io) {
+        userSockets.forEach((socketId) => {
+          io.to(socketId).emit("forceLogout", {
+            message: "Password changed. Please login again.",
+          });
         });
-      });
-
-      // Remove all sockets for this user
-      connectedUsers.delete(targetUser._id.toString());
+        // Remove user from connected map
+        connectedUsers.delete(targetUser._id.toString());
+      }
 
       return res.json({
         success: true,
@@ -512,6 +518,7 @@ router.put(
     }
   }
 );
+
 
 
 
