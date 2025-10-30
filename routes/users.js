@@ -513,7 +513,16 @@ router.put(
 
 // ---------------- Ping route for auto logout ----------------
 router.get("/ping", auth, (req, res) => {
-  res.json({ status: "ok", user: { id: req.dbUser._id, username: req.dbUser.username, role: req.dbUser.role } });
+  res.json({
+    status: "ok",
+    user: {
+      id: req.dbUser._id,
+      username: req.dbUser.username,
+      role: req.dbUser.role,
+      tokenVersion: req.dbUser.tokenVersion, // ✅ add this
+    },
+  });
 });
+
 
 module.exports = router;
