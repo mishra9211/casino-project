@@ -51,13 +51,8 @@ const Members = () => {
   const navigate = useNavigate();
 
 
-  const adminData = {
-    balance: parseFloat(localStorage.getItem("admin_balance")) || 0,
-    credit_reference:
-      parseFloat(localStorage.getItem("admin_credit_reference")) || 0,
-    exposure: parseFloat(localStorage.getItem("admin_exposure")) || 0,
-    p_l: parseFloat(localStorage.getItem("admin_p_l")) || 0,
-  };
+  const [adminData, setAdminData] = useState({});
+
 
   useEffect(() => {
     fetchUsers();
@@ -71,6 +66,22 @@ const Members = () => {
       console.error("Failed to fetch users:", err);
     }
   };
+
+
+  // Component mount पर API call
+useEffect(() => {
+  fetchAdminData();
+  fetchUsers();
+}, []);
+
+const fetchAdminData = async () => {
+  try {
+    const res = await axiosInstance.get("/users/details"); // ✅ अपनी API endpoint
+    setAdminData(res.data); // 💥 पूरा data state में save
+  } catch (err) {
+    console.error("Failed to fetch admin data:", err);
+  }
+};
 
   const toggleDownline = (userId) => {
     if (expandedUsers.includes(userId)) {
@@ -201,24 +212,25 @@ const [dwUser, setDwUser] = useState(null);
           </button>
         </div>
 
-        <div className="totals">
-          <div className="total-box">
-            <span>Credit Reference</span>
-            <p>{adminData.credit_reference.toLocaleString()}</p>
-          </div>
-          <div className="total-box">
-            <span>Available Balance</span>
-            <p>{adminData.balance.toLocaleString()}</p>
-          </div>
-          <div className="total-box">
-            <span>Total Exposure</span>
-            <p>{adminData.exposure.toLocaleString()}</p>
-          </div>
-          <div className="total-box">
-            <span>Total Profit</span>
-            <p>{adminData.p_l.toLocaleString()}</p>
-          </div>
-        </div>
+       <div className="totals">
+  <div className="total-box">
+    <span>Credit Reference</span>
+    <p>{adminData.credit_reference?.toLocaleString() ?? "0"}</p>
+  </div>
+  <div className="total-box">
+    <span>Available Balance</span>
+    <p>{adminData.balance?.toLocaleString() ?? "0"}</p>
+  </div>
+  <div className="total-box">
+    <span>Total Exposure</span>
+    <p>{adminData.exposure?.toLocaleString() ?? "0"}</p>
+  </div>
+  <div className="total-box">
+    <span>Total Profit</span>
+    <p>{adminData.p_l?.toLocaleString() ?? "0"}</p>
+  </div>
+</div>
+
 
         <button className="add-client-btn" onClick={() => setShowModal(true)}>
           ADD CLIENT

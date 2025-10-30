@@ -421,6 +421,35 @@ router.post(
   }
 );
 
+// ---------------- Get logged-in admin details ----------------
+router.get("/details", auth, requireRoles(["owner", "admin", "master"]), async (req, res) => {
+  try {
+    const admin = req.dbUser; // set by auth middleware
+    if (!admin) return res.status(404).json({ success: false, message: "Admin not found" });
+
+    // Only send relevant fields
+    res.json({
+      success: true,
+      data: {
+        _id: admin._id,
+        username: admin.username,
+        role: admin.role,
+        balance: admin.balance || 0,
+        credit_reference: admin.credit_reference || 0,
+        p_l: admin.p_l || 0,
+        exposure: admin.exposure || 0,
+        my_share: admin.my_share || 0,
+        parent_share: admin.parent_share || 0,
+        domain: admin.domain,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching admin details:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
 // ---------------- Ping route for auto logout ----------------
 router.get("/ping", auth, (req, res) => {
   res.json({ status: "ok", user: { id: req.dbUser._id, username: req.dbUser.username, role: req.dbUser.role } });
