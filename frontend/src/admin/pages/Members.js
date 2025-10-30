@@ -51,37 +51,33 @@ const Members = () => {
   const navigate = useNavigate();
 
 
-  const [adminData, setAdminData] = useState({});
+const [adminData, setAdminData] = useState({});
 
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await axiosInstance.get("/users");
-      setUsers(res.data || []);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    }
-  };
-
-
-  // Component mount पर API call
-useEffect(() => {
-  fetchAdminData();
-  fetchUsers();
-}, []);
+ const fetchUsers = async () => {
+  try {
+    const res = await axiosInstance.get("/users");
+    setUsers(res.data || []);
+  } catch (err) {
+    console.error("Failed to fetch users:", err);
+  }
+};
 
 const fetchAdminData = async () => {
   try {
-    const res = await axiosInstance.get("/users/details"); // ✅ अपनी API endpoint
-    setAdminData(res.data); // 💥 पूरा data state में save
+    const res = await axiosInstance.get("/users/details");
+    setAdminData(res.data.data);
   } catch (err) {
     console.error("Failed to fetch admin data:", err);
   }
 };
+
+useEffect(() => {
+  fetchUsers();
+  fetchAdminData();
+}, []);
+
+
 
   const toggleDownline = (userId) => {
     if (expandedUsers.includes(userId)) {
