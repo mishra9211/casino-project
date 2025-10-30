@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { registerSocket } from "../../socket"; // ✅ import socket helper
+import { registerAdminSocket } from "../../adminSocket";
 import "./AdminLogin.css";
 
 const AdminLogin = ({ setToken }) => {
@@ -50,7 +50,7 @@ const AdminLogin = ({ setToken }) => {
       localStorage.setItem("admin_id", _id);
 
       // ✅ Register socket for force logout
-      registerSocket(_id);
+      registerAdminSocket(_id);
 
       if (typeof setToken === "function") setToken(token);
 

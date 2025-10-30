@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance"; 
-import { registerSocket } from "../socket"; // ✅ import socket helper
+import { registerUserSocket } from "./usersocket"; // ✅ import user socket
 import styles from "./UserLogin.module.css";
 
 const UserLogin = () => {
@@ -39,7 +39,7 @@ const UserLogin = () => {
       localStorage.setItem("user_timezone", timezone);
 
       // ✅ Register socket for force logout
-      registerSocket(_id);
+      registerUserSocket(_id);
 
       setError("");
       navigate("/home");
