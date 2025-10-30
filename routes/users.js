@@ -8,7 +8,7 @@ const { auth, requireRoles } = require("../middlewares/auth");
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || "mysecret";
 const TOKEN_EXPIRY = process.env.JWT_EXPIRY || "2d"; // <-- .env ka value use hoga
-const { io, connectedUsers } = require("../server"); // ये वही server.js वाली instance है
+const { getIo, getConnectedUsers } = require("../socketStore");
 
 
 // ---------------- HELPER: generate token ----------------
@@ -473,30 +473,35 @@ router.put(
         return isDownline(parentId, child.uplineId);
       }
 
-      // Role-based permission check
-      if (loggedInUser.role === "owner" || loggedInUser.role === "admin" || loggedInUser.role === "master") {
+      // ✅ Role-based permission check
+      if (["owner", "admin", "master"].includes(loggedInUser.role)) {
         if (!(await isDownline(loggedInUser._id, targetUser._id))) {
           return res.status(403).json({ error: "Cannot change password of this user" });
         }
       }
 
-      // Hash the new password
+      // ✅ Hash the new password
       const hashed = await bcrypt.hash(password, 10);
       targetUser.password = hashed;
 
-      // Invalidate old tokens by incrementing tokenVersion
+      // ✅ Invalidate old tokens
       targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
-
       await targetUser.save();
 
-      // ---------------- Force Logout via Socket.io ----------------
+      // ✅ Force Logout via Socket.io
+      const io = getIo(); // get io instance
+      const connectedUsers = getConnectedUsers(); // get socket map
+
       const socketId = connectedUsers.get(targetUser._id.toString());
-      if (socketId) {
+      if (socketId && io) {
         io.to(socketId).emit("forceLogout", { message: "Password changed. Please login again." });
         connectedUsers.delete(targetUser._id.toString());
       }
 
-      return res.json({ success: true, message: "Password updated successfully and user logged out." });
+      return res.json({
+        success: true,
+        message: "Password updated successfully and user logged out.",
+      });
     } catch (err) {
       console.error("Password update error:", err);
       return res.status(500).json({ error: "Server error" });

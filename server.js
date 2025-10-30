@@ -35,26 +35,30 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ Map to track connected users
-const connectedUsers = new Map();
+const { setIo, getConnectedUsers } = require("./socketStore");
 
+// Socket.io
 // Socket.io
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   // Register userId with socket
   socket.on("register", (userId) => {
-    connectedUsers.set(userId, socket.id);
+    getConnectedUsers().set(userId, socket.id);
     console.log("Registered socket for user:", userId);
   });
 
   // Disconnect handler
   socket.on("disconnect", () => {
-    for (const [userId, id] of connectedUsers.entries()) {
-      if (id === socket.id) connectedUsers.delete(userId);
+    for (const [userId, id] of getConnectedUsers().entries()) {
+      if (id === socket.id) getConnectedUsers().delete(userId);
     }
     console.log("User disconnected:", socket.id);
   });
 });
+
+setIo(io); // ✅ store io globally
+
 
 // ✅ Health Check Route (for uptime monitoring)
 app.get("/api/health", (req, res) => {
