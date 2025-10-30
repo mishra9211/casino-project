@@ -9,28 +9,38 @@ const UpdatePasswordModal = ({ onClose, userId }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(""); // <-- new state for API messages
+  const [isError, setIsError] = useState(false); // <-- track if message is error
 
   const handleSubmit = async () => {
-  if (!password || !confirmPassword) {
-    return alert("Please fill in both fields.");
-  }
-  if (password !== confirmPassword) {
-    return alert("Passwords do not match!");
-  }
+    if (!password || !confirmPassword) {
+      setMessage("Please fill in both fields.");
+      setIsError(true);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMessage("Passwords do not match!");
+      setIsError(true);
+      return;
+    }
 
-  try {
-    setLoading(true);
-    const res = await axiosInstance.put(`/users/update-password/${userId}`, { password });
-    alert(res.data.message || "Password updated successfully!");
-    onClose();
-  } catch (err) {
-    console.error(err);
-    alert(err.response?.data?.error || "Failed to update password");
-  } finally {
-    setLoading(false);
-  }
-};
-
+    try {
+      setLoading(true);
+      setMessage(""); // reset previous messages
+      const res = await axiosInstance.put(`/users/update-password/${userId}`, { password });
+      setMessage(res.data.message || "Password updated successfully!");
+      setIsError(false);
+      setTimeout(() => {
+        onClose();
+      }, 1500); // auto-close modal after showing success message
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.error || "Failed to update password");
+      setIsError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="password-modal-overlay">
@@ -88,6 +98,13 @@ const UpdatePasswordModal = ({ onClose, userId }) => {
               )}
             </div>
           </div>
+
+          {/* API Message */}
+          {message && (
+            <div className={`api-message ${isError ? "error" : "success"}`}>
+              {message}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
