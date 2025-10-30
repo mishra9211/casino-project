@@ -40,7 +40,7 @@ const WithdrawModal = ({ user, onClose, onSuccess }) => {
       });
 
       if (response.data.success) {
-        alert(response.data.message || "Withdraw successful");
+        //alert(response.data.message || "Withdraw successful");*//
 
         // Optional: trigger parent refresh
         if (onSuccess) onSuccess(response.data);

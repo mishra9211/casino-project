@@ -1,25 +1,36 @@
 import React, { useState } from "react";
 import { FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
+import axiosInstance from "../../api/axiosInstance";
 import "./UpdatePasswordModal.css";
 
-const UpdatePasswordModal = ({ onClose, onSubmit }) => {
+const UpdatePasswordModal = ({ onClose, userId }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    if (!password || !confirmPassword) {
-      alert("Please fill in both fields.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-    onSubmit(password);
+  const handleSubmit = async () => {
+  if (!password || !confirmPassword) {
+    return alert("Please fill in both fields.");
+  }
+  if (password !== confirmPassword) {
+    return alert("Passwords do not match!");
+  }
+
+  try {
+    setLoading(true);
+    const res = await axiosInstance.put(`/users/update-password/${userId}`, { password });
+    alert(res.data.message || "Password updated successfully!");
     onClose();
-  };
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.error || "Failed to update password");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="password-modal-overlay">
@@ -84,8 +95,12 @@ const UpdatePasswordModal = ({ onClose, onSubmit }) => {
           <button className="cancel-btn-updatepassword" onClick={onClose}>
             Cancel
           </button>
-          <button className="submit-btn-updatepassword" onClick={handleSubmit}>
-            Submit
+          <button
+            className="submit-btn-updatepassword"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "Submit"}
           </button>
         </div>
       </div>

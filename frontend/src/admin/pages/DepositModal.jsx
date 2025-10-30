@@ -40,7 +40,7 @@ const DepositModal = ({ user, onClose, onSuccess }) => {
       });
 
       if (response.data.success) {
-        alert(response.data.message || "Deposit successful");
+        //alert(response.data.message || "Deposit successful");//
 
         // Optionally refresh parent data
         if (onSuccess) onSuccess(response.data);

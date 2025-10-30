@@ -400,6 +400,7 @@ const [dwUser, setDwUser] = useState(null);
           onClose={() => setShowModal(false)}
           onUserCreated={(user, message) => {
             fetchUsers();
+            fetchAdminData(); // admin data refresh
             if (message) {
               setSuccessMessage(message);
               setTimeout(() => setSuccessMessage(""), 4000);
@@ -431,6 +432,7 @@ const [dwUser, setDwUser] = useState(null);
     onClose={() => setShowDepositModal(false)}
     onSuccess={async (res) => { // res is the response object from API
       await fetchUsers();
+      await fetchAdminData(); // ✅ only refresh admin data
       setShowDepositModal(false);
       setSuccessMessage(res.message); // ✅ Only the message string
       setTimeout(() => setSuccessMessage(""), 4000);
@@ -444,6 +446,7 @@ const [dwUser, setDwUser] = useState(null);
     onClose={() => setShowWithdrawModal(false)}
     onSuccess={async (res) => { // res is the response object from API
       await fetchUsers();
+      await fetchAdminData(); // ✅ only refresh admin data
       setShowWithdrawModal(false);
       setSuccessMessage(res.message); // ✅ Only the message string
       setTimeout(() => setSuccessMessage(""), 4000);

@@ -15,12 +15,18 @@ async function auth(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, SECRET);
-    req.user = decoded;
 
     // Fetch user from DB
-    req.dbUser = await User.findById(decoded.user_id);
-    if (!req.dbUser) return res.status(401).json({ error: "User not found. Please login again." });
+    const user = await User.findById(decoded.user_id);
+    if (!user) return res.status(401).json({ error: "User not found. Please login again." });
 
+    // ✅ Check tokenVersion
+    if ((decoded.tokenVersion || 0) !== (user.tokenVersion || 0)) {
+      return res.status(401).json({ error: "Token expired due to password change. Please login again." });
+    }
+
+    req.dbUser = user;
+    req.user = decoded;
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
@@ -29,6 +35,7 @@ async function auth(req, res, next) {
     return res.status(403).json({ error: "Invalid token. Please login again." });
   }
 }
+
 
 // ---------------- verifyToken (For Public APIs with JWT) ----------------
 function verifyToken(req, res, next) {

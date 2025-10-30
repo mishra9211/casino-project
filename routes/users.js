@@ -450,6 +450,67 @@ router.get("/details", auth, requireRoles(["owner", "admin", "master"]), async (
 });
 
 
+// ---------------- Update password of a downline user ----------------
+router.put(
+  "/update-password/:id",
+  auth,
+  requireRoles(["owner", "admin", "master"]),
+  async (req, res) => {
+    try {
+      const { password } = req.body;
+      const targetUser = await User.findById(req.params.id);
+      if (!targetUser) return res.status(404).json({ error: "User not found" });
+
+      const loggedInUser = req.dbUser;
+
+      // Helper: check if target user is downline
+      async function isDownline(parentId, childId) {
+        const child = await User.findById(childId);
+        if (!child || !child.uplineId) return false;
+        if (child.uplineId.equals(parentId)) return true;
+        return isDownline(parentId, child.uplineId);
+      }
+
+      // Owner can update any downline user
+      if (loggedInUser.role === "owner") {
+        if (!(await isDownline(loggedInUser._id, targetUser._id))) {
+          return res.status(403).json({ error: "Cannot change password of this user" });
+        }
+      }
+
+      // Admin can update their downline
+      else if (loggedInUser.role === "admin") {
+        if (!(await isDownline(loggedInUser._id, targetUser._id))) {
+          return res.status(403).json({ error: "Cannot change password of this user" });
+        }
+      }
+
+      // Master can update their own downline only
+      else if (loggedInUser.role === "master") {
+        if (!(await isDownline(loggedInUser._id, targetUser._id))) {
+          return res.status(403).json({ error: "Cannot change password of this user" });
+        }
+      }
+
+      // Hash the new password
+      const hashed = await bcrypt.hash(password, 10);
+      targetUser.password = hashed;
+
+      // Optional: Invalidate old tokens by incrementing a version
+      targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
+
+      await targetUser.save();
+
+      return res.json({ success: true, message: "Password updated successfully" });
+    } catch (err) {
+      console.error("Password update error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+
+
 // ---------------- Ping route for auto logout ----------------
 router.get("/ping", auth, (req, res) => {
   res.json({ status: "ok", user: { id: req.dbUser._id, username: req.dbUser.username, role: req.dbUser.role } });
