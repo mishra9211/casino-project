@@ -54,15 +54,25 @@ const useAutoLogoutPing = () => {
     // ---------------- Ping API 5s before expiry ----------------
     const pingTime = timeout - 5000 > 0 ? timeout - 5000 : 0;
     const pingTimer = setTimeout(async () => {
-      console.log("Calling ping API 5 sec before token expiry...");
-      try {
-        await axiosInstance.get("/users/ping");
-        console.log("Ping successful ✅");
-      } catch (err) {
-        console.log("Ping failed, logging out ❌");
-        logout();
-      }
-    }, pingTime);
+  console.log("Calling ping API 5 sec before token expiry...");
+  try {
+    const res = await axiosInstance.get("/users/ping"); 
+    const serverTokenVersion = res.data.user?.tokenVersion || 0;
+
+    if (decoded.tokenVersion !== serverTokenVersion) {
+      console.log("Token invalid due to password change, logging out...");
+      localStorage.clear();
+      navigate(path.startsWith("/admin") ? "/admin/login" : "/");
+    } else {
+      console.log("Ping successful ✅");
+    }
+  } catch (err) {
+    console.log("Ping failed, logging out ❌");
+    localStorage.clear();
+    navigate(path.startsWith("/admin") ? "/admin/login" : "/");
+  }
+}, pingTime);
+
 
     // ---------------- Optional: countdown every second (debug) ----------------
     const interval = setInterval(() => {

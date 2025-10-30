@@ -31,11 +31,10 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
-
-    const isAdmin = window.location.pathname.startsWith("/admin");
+    const path = window.location.pathname;
+    const isAdmin = path.startsWith("/admin");
 
     if (status === 401) {
-      // Only logout on 401 (unauthorized)
       if (isAdmin) {
         localStorage.removeItem("admin_token");
         localStorage.removeItem("admin_username");
@@ -43,18 +42,21 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem("admin_domain");
         window.location.href = "/admin/login";
       } else {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        localStorage.removeItem("role");
-        localStorage.removeItem("domain");
+        // Correct keys for user
+        localStorage.removeItem("user_token");
+        localStorage.removeItem("user_username");
+        localStorage.removeItem("user_role");
+        localStorage.removeItem("user_domain");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("user_timezone");
         window.location.href = "/";
       }
     }
 
-    // 403 validation errors → do NOT logout
     return Promise.reject(error);
   }
 );
+
 
 
 export default axiosInstance;
