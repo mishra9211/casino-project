@@ -8,6 +8,8 @@ const { auth, requireRoles } = require("../middlewares/auth");
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || "mysecret";
 const TOKEN_EXPIRY = process.env.JWT_EXPIRY || "2d"; // <-- .env ka value use hoga
+const { io, connectedUsers } = require("../server"); // ये वही server.js वाली instance है
+
 
 // ---------------- HELPER: generate token ----------------
 function generateToken(user, expiresIn = TOKEN_EXPIRY) {
@@ -471,22 +473,8 @@ router.put(
         return isDownline(parentId, child.uplineId);
       }
 
-      // Owner can update any downline user
-      if (loggedInUser.role === "owner") {
-        if (!(await isDownline(loggedInUser._id, targetUser._id))) {
-          return res.status(403).json({ error: "Cannot change password of this user" });
-        }
-      }
-
-      // Admin can update their downline
-      else if (loggedInUser.role === "admin") {
-        if (!(await isDownline(loggedInUser._id, targetUser._id))) {
-          return res.status(403).json({ error: "Cannot change password of this user" });
-        }
-      }
-
-      // Master can update their own downline only
-      else if (loggedInUser.role === "master") {
+      // Role-based permission check
+      if (loggedInUser.role === "owner" || loggedInUser.role === "admin" || loggedInUser.role === "master") {
         if (!(await isDownline(loggedInUser._id, targetUser._id))) {
           return res.status(403).json({ error: "Cannot change password of this user" });
         }
@@ -496,12 +484,19 @@ router.put(
       const hashed = await bcrypt.hash(password, 10);
       targetUser.password = hashed;
 
-      // Optional: Invalidate old tokens by incrementing a version
+      // Invalidate old tokens by incrementing tokenVersion
       targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
 
       await targetUser.save();
 
-      return res.json({ success: true, message: "Password updated successfully" });
+      // ---------------- Force Logout via Socket.io ----------------
+      const socketId = connectedUsers.get(targetUser._id.toString());
+      if (socketId) {
+        io.to(socketId).emit("forceLogout", { message: "Password changed. Please login again." });
+        connectedUsers.delete(targetUser._id.toString());
+      }
+
+      return res.json({ success: true, message: "Password updated successfully and user logged out." });
     } catch (err) {
       console.error("Password update error:", err);
       return res.status(500).json({ error: "Server error" });
