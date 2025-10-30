@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance"; 
-import { registerUserSocket } from "./usersocket"; // ✅ import user socket
+import { registerUserSocket } from '../userSocket'; // note capital S
 import styles from "./UserLogin.module.css";
 
 const UserLogin = () => {
