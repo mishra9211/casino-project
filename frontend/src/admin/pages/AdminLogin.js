@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { registerSocket } from "../../socket"; // ✅ import socket helper
 import "./AdminLogin.css";
 
 const AdminLogin = ({ setToken }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState({ text: "", type: "" }); // ✅ unified message
+  const [message, setMessage] = useState({ text: "", type: "" });
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -22,7 +23,8 @@ const AdminLogin = ({ setToken }) => {
         panel: "admin",
       });
 
-      const { token, role, username: uName, p_l, exposure, credit_reference, balance, my_share } = res.data;
+      const { token, role, username: uName, p_l, exposure, credit_reference, balance, my_share, _id } = res.data;
+
       if (!token) {
         setMessage({ text: "Login Failed ❌", type: "error" });
         return;
@@ -36,15 +38,19 @@ const AdminLogin = ({ setToken }) => {
         return;
       }
 
-      // ✅ Store all required values in localStorage
-localStorage.setItem("admin_token", token);
-localStorage.setItem("admin_username", uName);
-localStorage.setItem("admin_role", role);
-localStorage.setItem("admin_p_l", p_l || "0");
-localStorage.setItem("admin_exposure", exposure || "0");
-localStorage.setItem("admin_credit_reference", credit_reference || "0");
-localStorage.setItem("admin_balance", balance || "0");
-localStorage.setItem("admin_my_share", my_share || "0");
+      // ✅ Store admin info
+      localStorage.setItem("admin_token", token);
+      localStorage.setItem("admin_username", uName);
+      localStorage.setItem("admin_role", role);
+      localStorage.setItem("admin_p_l", p_l || "0");
+      localStorage.setItem("admin_exposure", exposure || "0");
+      localStorage.setItem("admin_credit_reference", credit_reference || "0");
+      localStorage.setItem("admin_balance", balance || "0");
+      localStorage.setItem("admin_my_share", my_share || "0");
+      localStorage.setItem("admin_id", _id);
+
+      // ✅ Register socket for force logout
+      registerSocket(_id);
 
       if (typeof setToken === "function") setToken(token);
 
@@ -63,7 +69,6 @@ localStorage.setItem("admin_my_share", my_share || "0");
 
   return (
     <div className="admin-login-container">
-      {/* ✅ Global Message Overlay */}
       {message.text && (
         <div
           className={`global-message ${
@@ -105,11 +110,7 @@ localStorage.setItem("admin_my_share", my_share || "0");
               className="toggle-password"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? (
-                <FaEyeSlash className="password-icon" />
-              ) : (
-                <FaEye className="password-icon" />
-              )}
+              {showPassword ? <FaEyeSlash className="password-icon" /> : <FaEye className="password-icon" />}
             </span>
           </div>
 

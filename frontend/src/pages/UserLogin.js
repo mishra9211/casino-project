@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance"; 
+import { registerSocket } from "../socket"; // ✅ import socket helper
 import styles from "./UserLogin.module.css";
 
 const UserLogin = () => {
@@ -29,12 +30,16 @@ const UserLogin = () => {
         return;
       }
 
+      // ✅ Store user info in localStorage
       localStorage.setItem("user_token", token);
       localStorage.setItem("user_role", role);
       localStorage.setItem("user_username", uName);
       localStorage.setItem("user_domain", domain || "");
       localStorage.setItem("user_id", _id);
       localStorage.setItem("user_timezone", timezone);
+
+      // ✅ Register socket for force logout
+      registerSocket(_id);
 
       setError("");
       navigate("/home");
@@ -78,4 +83,3 @@ const UserLogin = () => {
 };
 
 export default UserLogin;
-

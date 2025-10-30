@@ -34,6 +34,28 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// ✅ Map to track connected users
+const connectedUsers = new Map();
+
+// Socket.io
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  // Register userId with socket
+  socket.on("register", (userId) => {
+    connectedUsers.set(userId, socket.id);
+    console.log("Registered socket for user:", userId);
+  });
+
+  // Disconnect handler
+  socket.on("disconnect", () => {
+    for (const [userId, id] of connectedUsers.entries()) {
+      if (id === socket.id) connectedUsers.delete(userId);
+    }
+    console.log("User disconnected:", socket.id);
+  });
+});
+
 // ✅ Health Check Route (for uptime monitoring)
 app.get("/api/health", (req, res) => {
   res.status(200).json({ success: true, message: "Backend is alive ✅" });
@@ -49,6 +71,21 @@ app.use("/api/categories", categoriesRoutes);
 app.use("/api/categorywise", categorywiseRoutes);
 app.use("/api", matkaBetRoutes);
 
+// ---------------- Force Logout Endpoint (optional) ----------------
+// Example: call this after password change
+app.post("/api/users/force-logout/:userId", (req, res) => {
+  const { userId } = req.params;
+  const socketId = connectedUsers.get(userId);
+
+  if (socketId) {
+    io.to(socketId).emit("forceLogout", { message: "Your session has expired, please login again." });
+    connectedUsers.delete(userId);
+    return res.json({ success: true, message: "Logout event sent" });
+  }
+
+  res.json({ success: false, message: "User not connected" });
+});
+
 // MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/casino_db")
@@ -57,12 +94,6 @@ mongoose
 
 // JWT Secret
 const SECRET = process.env.JWT_SECRET || "mysecret";
-
-// Socket.io
-io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-  socket.on("disconnect", () => console.log("User disconnected:", socket.id));
-});
 
 // ✅ Self-Ping System (keep Render awake)
 setInterval(() => {
@@ -76,3 +107,5 @@ const PORT = process.env.PORT || 5001;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = { io, connectedUsers }; // export for other routes if needed
