@@ -76,13 +76,14 @@ app.use("/api/categorywise", categorywiseRoutes);
 app.use("/api", matkaBetRoutes);
 
 // ---------------- Force Logout Endpoint (optional) ----------------
-// Example: call this after password change
 app.post("/api/users/force-logout/:userId", (req, res) => {
   const { userId } = req.params;
+  const connectedUsers = getConnectedUsers();
   const socketId = connectedUsers.get(userId);
+  const ioInstance = io; // या getIo() भी कर सकते हो
 
   if (socketId) {
-    io.to(socketId).emit("forceLogout", { message: "Your session has expired, please login again." });
+    ioInstance.to(socketId).emit("forceLogout", { message: "Your session has expired, please login again." });
     connectedUsers.delete(userId);
     return res.json({ success: true, message: "Logout event sent" });
   }
@@ -112,4 +113,3 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = { io, connectedUsers }; // export for other routes if needed
