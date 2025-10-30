@@ -8,7 +8,7 @@ const { auth, requireRoles } = require("../middlewares/auth");
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || "mysecret";
 const TOKEN_EXPIRY = process.env.JWT_EXPIRY || "2d"; // <-- .env ka value use hoga
-const { getIo, getConnectedUsers } = require("../socketStore");
+const { getIo, getConnectedUsers } = require("../utils/socketStore");
 
 
 // ---------------- HELPER: generate token ----------------

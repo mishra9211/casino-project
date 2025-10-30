@@ -35,7 +35,7 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ Map to track connected users
-const { setIo, getConnectedUsers } = require("./socketStore");
+const { setIo, getConnectedUsers } = require("./utils/socketStore");
 
 // Socket.io
 // Socket.io
