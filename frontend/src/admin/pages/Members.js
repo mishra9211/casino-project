@@ -422,6 +422,7 @@ const [dwUser, setDwUser] = useState(null);
       {showPasswordModal && passwordUser && (
         <UpdatePasswordModal
           onClose={() => setShowPasswordModal(false)}
+          userId={passwordUser._id}
           onSubmit={(newPassword) => handlePasswordUpdate(newPassword)}
         />
       )}

@@ -36,12 +36,10 @@ async function auth(req, res, next) {
   }
 }
 
-
 // ---------------- verifyToken (For Public APIs with JWT) ----------------
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
-  // Token missing
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Unauthorized: No token provided" });
   }
@@ -50,7 +48,7 @@ function verifyToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, SECRET);
-    req.user = decoded; // user_id, role आदि
+    req.user = decoded; // user_id, role, tokenVersion
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
@@ -74,7 +72,11 @@ function requireRoles(roles) {
 // ---------------- GENERATE TOKEN ----------------
 function generateToken(user) {
   return jwt.sign(
-    { user_id: user._id, role: user.role },
+    { 
+      user_id: user._id, 
+      role: user.role,
+      tokenVersion: user.tokenVersion || 0 // ✅ Add tokenVersion
+    },
     SECRET,
     { expiresIn: TOKEN_EXPIRY }
   );

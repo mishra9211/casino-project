@@ -16,7 +16,7 @@ const UserSchema = new mongoose.Schema(
     credit_reference: { type: Number, default: 0 },
     my_share: { type: Number, default: 0 },
     parent_share: { type: Number, default: 0 },
-    maxBalance: { type: Number, default: 0 },   // ✅ NEW FIELD
+    maxBalance: { type: Number, default: 0 },
     p_l: { type: Number, default: 0 },
     exposure: { type: Number, default: 0 },
 
@@ -25,6 +25,9 @@ const UserSchema = new mongoose.Schema(
     uplineId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     exposureLimit: { type: Number, default: -1 },
     timezone: { type: String, default: "Asia/Kolkata" },
+
+    // 🔐 Token version for password-change-based logout
+    tokenVersion: { type: Number, default: 0 }, // ✅ Add this
   },
   { timestamps: true }
 );
