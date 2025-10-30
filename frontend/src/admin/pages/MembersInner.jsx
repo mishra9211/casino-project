@@ -333,29 +333,34 @@ const MembersInner = () => {
         />
       )}
 
-      {/* 💰 Deposit Modal */}
-      {showDepositModal && dwUser && (
-        <DepositModal
-          user={dwUser}
-          onClose={() => setShowDepositModal(false)}
-          onSubmit={(data) => {
-            console.log("Deposit data:", data);
-            setShowDepositModal(false);
-          }}
-        />
-      )}
+     {/* 💰 Deposit Modal */}
+{showDepositModal && dwUser && (
+  <DepositModal
+    user={dwUser}
+    onClose={() => setShowDepositModal(false)}
+    onSuccess={async (res) => { // res is the API response object
+      await fetchUsers();        // refresh table
+      setShowDepositModal(false);
+      setSuccessMessage(res.message); // show API message
+      setTimeout(() => setSuccessMessage(""), 4000);
+    }}
+  />
+)}
 
-      {/* 💸 Withdraw Modal */}
-      {showWithdrawModal && dwUser && (
-        <WithdrawModal
-          user={dwUser}
-          onClose={() => setShowWithdrawModal(false)}
-          onSubmit={(data) => {
-            console.log("Withdraw data:", data);
-            setShowWithdrawModal(false);
-          }}
-        />
-      )}
+{/* 💸 Withdraw Modal */}
+{showWithdrawModal && dwUser && (
+  <WithdrawModal
+    user={dwUser}
+    onClose={() => setShowWithdrawModal(false)}
+    onSuccess={async (res) => { // res is the API response object
+      await fetchUsers();        // refresh table
+      setShowWithdrawModal(false);
+      setSuccessMessage(res.message); // show API message
+      setTimeout(() => setSuccessMessage(""), 4000);
+    }}
+  />
+)}
+
     </div>
   );
 };

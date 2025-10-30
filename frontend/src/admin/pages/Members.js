@@ -417,13 +417,15 @@ const [dwUser, setDwUser] = useState(null);
         />
       )}
 
-      {showDepositModal && dwUser && (
+  {showDepositModal && dwUser && (
   <DepositModal
     user={dwUser}
     onClose={() => setShowDepositModal(false)}
-    onSubmit={(data) => {
-      console.log("Deposit data:", data);
+    onSuccess={async (res) => { // res is the response object from API
+      await fetchUsers();
       setShowDepositModal(false);
+      setSuccessMessage(res.message); // ✅ Only the message string
+      setTimeout(() => setSuccessMessage(""), 4000);
     }}
   />
 )}
@@ -432,12 +434,15 @@ const [dwUser, setDwUser] = useState(null);
   <WithdrawModal
     user={dwUser}
     onClose={() => setShowWithdrawModal(false)}
-    onSubmit={(data) => {
-      console.log("Withdraw data:", data);
+    onSuccess={async (res) => { // res is the response object from API
+      await fetchUsers();
       setShowWithdrawModal(false);
+      setSuccessMessage(res.message); // ✅ Only the message string
+      setTimeout(() => setSuccessMessage(""), 4000);
     }}
   />
 )}
+
 
     </div>
   );
