@@ -30,7 +30,10 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "https://casino-project-1.onrender.com", // आपके frontend URL
+  credentials: true, // ✅ cookie allow
+}));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

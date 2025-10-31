@@ -236,8 +236,15 @@ router.post("/login", async (req, res) => {
       await user.save();
     }
 
-    const token = generateToken(user);
+const token = generateToken(user);
 
+// ✅ Send JWT as cookie for auto-login
+res.cookie("token", token, {
+  httpOnly: true,     // JS से access नहीं होगा
+  secure: true,       // HTTPS required
+  sameSite: "none",   // cross-site navigation support
+  maxAge: 24*60*60*1000 // 1 दिन
+});
     // ✅ Send all financial fields along with user info
     res.json({
       token,

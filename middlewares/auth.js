@@ -10,17 +10,16 @@ console.log("JWT EXPIRY:", TOKEN_EXPIRY);
 
 // ---------------- MAIN AUTH (For Admin / Master routes) ----------------
 async function auth(req, res, next) {
-  const token = req.headers["authorization"]?.split(" ")[1];
+  // ✅ Read token from header OR cookie
+  const token = req.headers["authorization"]?.split(" ")[1] || req.cookies?.token;
   if (!token) return res.status(401).json({ error: "No token. Please login again." });
 
   try {
     const decoded = jwt.verify(token, SECRET);
 
-    // Fetch user from DB
     const user = await User.findById(decoded.user_id);
     if (!user) return res.status(401).json({ error: "User not found. Please login again." });
 
-    // ✅ Check tokenVersion
     if ((decoded.tokenVersion || 0) !== (user.tokenVersion || 0)) {
       return res.status(401).json({ error: "Token expired due to password change. Please login again." });
     }
@@ -38,17 +37,12 @@ async function auth(req, res, next) {
 
 // ---------------- verifyToken (For Public APIs with JWT) ----------------
 function verifyToken(req, res, next) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized: No token provided" });
-  }
-
-  const token = authHeader.split(" ")[1];
+  const token = req.headers.authorization?.split(" ")[1] || req.cookies?.token;
+  if (!token) return res.status(401).json({ error: "Unauthorized: No token provided" });
 
   try {
     const decoded = jwt.verify(token, SECRET);
-    req.user = decoded; // user_id, role, tokenVersion
+    req.user = decoded;
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {

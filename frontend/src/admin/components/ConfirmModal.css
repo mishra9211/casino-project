@@ -1,0 +1,110 @@
+.confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.confirm-modal-container {
+  background: #fff;
+  border-radius: 40px;
+  padding: 35px 45px; /* tighter padding */
+  width: 400px; /* 👈 reduced width for compact look */
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  animation: popIn 0.35s ease forwards;
+  transform: scale(0.9);
+  opacity: 0;
+}
+
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === Circle Around Icon === */
+.confirm-icon-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid #7b8da0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 20px auto;
+}
+
+.confirm-icon {
+  font-size: 40px;
+  font-weight: bold;
+  color: #7b8da0;
+  line-height: 1;
+}
+
+.confirm-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.confirm-message {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+}
+
+.btn-yes {
+  background-color: #3a944a;
+  color: #fff;
+  border: none;
+  padding: 8px 22px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-yes:hover {
+  background-color: #2f7d3e;
+}
+
+.btn-no {
+  background-color: #fdeaea;
+  color: #d43f3f;
+  border: none;
+  padding: 8px 22px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-no:hover {
+  background-color: #f8d4d4;
+}
