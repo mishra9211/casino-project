@@ -31,8 +31,8 @@ const io = new Server(server, { cors: { origin: "*" } });
 
 // Middleware
 app.use(cors({
-  origin: "https://casino-project-1.onrender.com", // आपके frontend URL
-  credentials: true, // ✅ cookie allow
+  origin: ["http://localhost:3000", "https://casino-project-1.onrender.com"],
+  credentials: true
 }));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
